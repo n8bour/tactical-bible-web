@@ -1,0 +1,12 @@
+{
+  "GK": "Goalkeeper",
+  "DC": "Centre-back",
+  "D_LR": "Full-back (D L/R)",
+  "WB_LR": "Wing-back (WB L/R)",
+  "DM": "Defensive midfielder",
+  "MC": "Central midfielder",
+  "M_LR": "Wide midfielder (M L/R)",
+  "AMC": "Attacking midfielder (centre)",
+  "AM_LR": "Winger (AM L/R)",
+  "ST": "Striker"
+}

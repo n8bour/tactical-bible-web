@@ -1,0 +1,62 @@
+[
+  {
+    "key": "ip_oop",
+    "name": "In / Out of Possession",
+    "text": "Since FM26, every player has an in-possession role (IP) and an out-of-possession role (OOP), and the team has a formation for each phase. There are no duties or fluidity: behaviour comes from the role + instructions. The game warns you if the distance between a player’s IP and OOP positions is too large — that creates holes in transitions.",
+    "scene": true
+  },
+  {
+    "key": "rest_def",
+    "name": "Rest-defence",
+    "text": "Players who stay behind the ball during the attack to stop the counter-attack. Rule of thumb: 3 to 5 (not counting the GK) with a Positive/Attacking mentality — typically 2 centre-backs + 1 defensive midfielder, or a full-back who tucks inside (IFB/IWB).",
+    "scene": true
+  },
+  {
+    "key": "width",
+    "name": "Width",
+    "text": "Each flank needs ONE player giving width in the final third (W, WF, WB, AWB, WCM, OCB). If the winger comes inside, the width must come from behind. Two wide players in the same channel get in each other’s way.",
+    "scene": true
+  },
+  {
+    "key": "box",
+    "name": "Box occupation",
+    "text": "At least 2–3 players attacking the box (striker + inside winger/AM/BBM). With a false 9 or DLF, someone has to attack depth (IF, CHM, SS). In FM27 the new box-attacking instructions (near/centre/far post, arrive late) let you coordinate who goes to each zone.",
+    "scene": true
+  },
+  {
+    "key": "press_coh",
+    "name": "Pressing coherence",
+    "text": "The line of engagement (LoE) and the defensive line must move together. High LoE + deep line = a hole between the lines. Low LoE + high line = space in behind with no pressure on the pass. Pressing Trap Outside needs someone to close the channel (Pressing FB/WB, Tracking Winger).",
+    "scene": true
+  },
+  {
+    "key": "outlets",
+    "name": "Outlets",
+    "text": "OOP “Outlet” roles stay forward for the counter-attack and do not defend. 1–2 give you an outlet; 3+ leave the block outnumbered.",
+    "scene": true
+  },
+  {
+    "key": "creativity",
+    "name": "Creativity",
+    "text": "1–2 main creators (DLP, MP, AP, FR, PW, PWB). Too many creators = everyone wants the ball, nobody attacks the space.",
+    "scene": true
+  },
+  {
+    "key": "asymmetry",
+    "name": "Asymmetry",
+    "text": "Different sides are not a flaw: a safe full-back (IFB) on one side and an attacking wing-back (WB/AWB) on the other is one of the most stable structures. Put the attacking side on your best player’s flank.",
+    "scene": true
+  },
+  {
+    "key": "complexity",
+    "name": "Complexity (FM27)",
+    "text": "FM27 measures complexity (team, player and opposition instructions). The more complex it is, the more capable the players and the more training time they need. In the lower leagues, simplicity wins games.",
+    "scene": false
+  },
+  {
+    "key": "effectiveness",
+    "name": "Tactical Effectiveness (FM27)",
+    "text": "Replaces Tactical Familiarity. Four pillars: Tactical Understanding, Player Ability, Player Buy-In and Next Match Information. Visible in Training, on the tactics screen, the squad, the database and scouting reports (“Projected Effectiveness”).",
+    "scene": false
+  }
+]

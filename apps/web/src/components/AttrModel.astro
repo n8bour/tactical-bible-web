@@ -1,0 +1,24 @@
+---
+import { attrUses, ATTR_NAME, href, RULE_LABEL } from '../lib/site';
+
+interface Props {
+  keys: string[];
+  keyAttrs?: string[];
+}
+const { keys, keyAttrs = [] } = Astro.props;
+const uses = attrUses(keys).filter((u) => u.rules.length);
+const unused = attrUses(keys).filter((u) => !u.rules.length);
+---
+<ul>
+  {uses.map((u) => (
+    <li>
+      <a href={href(`/attributes/${u.attr}`)}>{keyAttrs.includes(u.attr) ? <strong>{ATTR_NAME[u.attr]}</strong> : ATTR_NAME[u.attr]}</a>:{' '}
+      {u.rules.map((r, i) => (
+        <span>{i ? '; ' : ''}{RULE_LABEL[r.key as keyof typeof RULE_LABEL]} (<code>{r.formula}</code>) <span class="badge" data-src={r.src}>{r.src.toUpperCase()}</span></span>
+      ))}
+    </li>
+  ))}
+</ul>
+{unused.length > 0 && (
+  <p>Not modelled yet: {unused.map((u, i) => <span>{i ? ', ' : ''}<a href={href(`/attributes/${u.attr}`)}>{ATTR_NAME[u.attr]}</a></span>)}.</p>
+)}

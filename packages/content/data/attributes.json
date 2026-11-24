@@ -1,0 +1,237 @@
+[
+  {
+    "key": "cor",
+    "name": "Corners",
+    "cat": "T"
+  },
+  {
+    "key": "cro",
+    "name": "Crossing",
+    "cat": "T"
+  },
+  {
+    "key": "dri",
+    "name": "Dribbling",
+    "cat": "T"
+  },
+  {
+    "key": "fin",
+    "name": "Finishing",
+    "cat": "T"
+  },
+  {
+    "key": "fir",
+    "name": "First Touch",
+    "cat": "T"
+  },
+  {
+    "key": "fre",
+    "name": "Free Kick Taking",
+    "cat": "T"
+  },
+  {
+    "key": "hea",
+    "name": "Heading",
+    "cat": "T"
+  },
+  {
+    "key": "lon",
+    "name": "Long Shots",
+    "cat": "T"
+  },
+  {
+    "key": "lth",
+    "name": "Long Throws",
+    "cat": "T"
+  },
+  {
+    "key": "mar",
+    "name": "Marking",
+    "cat": "T"
+  },
+  {
+    "key": "pas",
+    "name": "Passing",
+    "cat": "T"
+  },
+  {
+    "key": "pen",
+    "name": "Penalty Taking",
+    "cat": "T"
+  },
+  {
+    "key": "tck",
+    "name": "Tackling",
+    "cat": "T"
+  },
+  {
+    "key": "tec",
+    "name": "Technique",
+    "cat": "T"
+  },
+  {
+    "key": "agg",
+    "name": "Aggression",
+    "cat": "M"
+  },
+  {
+    "key": "ant",
+    "name": "Anticipation",
+    "cat": "M"
+  },
+  {
+    "key": "bra",
+    "name": "Bravery",
+    "cat": "M"
+  },
+  {
+    "key": "cmp",
+    "name": "Composure",
+    "cat": "M"
+  },
+  {
+    "key": "cnt",
+    "name": "Concentration",
+    "cat": "M"
+  },
+  {
+    "key": "dec",
+    "name": "Decisions",
+    "cat": "M"
+  },
+  {
+    "key": "det",
+    "name": "Determination",
+    "cat": "M"
+  },
+  {
+    "key": "fla",
+    "name": "Flair",
+    "cat": "M"
+  },
+  {
+    "key": "ldr",
+    "name": "Leadership",
+    "cat": "M"
+  },
+  {
+    "key": "otb",
+    "name": "Off the Ball",
+    "cat": "M"
+  },
+  {
+    "key": "pos",
+    "name": "Positioning",
+    "cat": "M"
+  },
+  {
+    "key": "tea",
+    "name": "Teamwork",
+    "cat": "M"
+  },
+  {
+    "key": "vis",
+    "name": "Vision",
+    "cat": "M"
+  },
+  {
+    "key": "wor",
+    "name": "Work Rate",
+    "cat": "M"
+  },
+  {
+    "key": "acc",
+    "name": "Acceleration",
+    "cat": "F"
+  },
+  {
+    "key": "agi",
+    "name": "Agility",
+    "cat": "F"
+  },
+  {
+    "key": "bal",
+    "name": "Balance",
+    "cat": "F"
+  },
+  {
+    "key": "jum",
+    "name": "Jumping Reach",
+    "cat": "F"
+  },
+  {
+    "key": "nat",
+    "name": "Natural Fitness",
+    "cat": "F"
+  },
+  {
+    "key": "pac",
+    "name": "Pace",
+    "cat": "F"
+  },
+  {
+    "key": "sta",
+    "name": "Stamina",
+    "cat": "F"
+  },
+  {
+    "key": "str",
+    "name": "Strength",
+    "cat": "F"
+  },
+  {
+    "key": "aer",
+    "name": "Aerial Reach",
+    "cat": "G"
+  },
+  {
+    "key": "cmd",
+    "name": "Command of Area",
+    "cat": "G"
+  },
+  {
+    "key": "com",
+    "name": "Communication",
+    "cat": "G"
+  },
+  {
+    "key": "ecc",
+    "name": "Eccentricity",
+    "cat": "G"
+  },
+  {
+    "key": "han",
+    "name": "Handling",
+    "cat": "G"
+  },
+  {
+    "key": "kic",
+    "name": "Kicking",
+    "cat": "G"
+  },
+  {
+    "key": "ovo",
+    "name": "One on Ones",
+    "cat": "G"
+  },
+  {
+    "key": "pun",
+    "name": "Punching (Tendency)",
+    "cat": "G"
+  },
+  {
+    "key": "ref",
+    "name": "Reflexes",
+    "cat": "G"
+  },
+  {
+    "key": "tro",
+    "name": "Rushing Out (Tendency)",
+    "cat": "G"
+  },
+  {
+    "key": "thr",
+    "name": "Throwing",
+    "cat": "G"
+  }
+]

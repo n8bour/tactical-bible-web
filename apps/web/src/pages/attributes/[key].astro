@@ -1,0 +1,50 @@
+---
+import { getCollection, render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { attrUses, CAT_NAME, href, rolesUsing, RULE_LABEL } from '../../lib/site';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('attributes');
+  return entries.map((entry) => ({ params: { key: entry.data.key }, props: { entry } }));
+}
+const { entry } = Astro.props;
+const a = entry.data;
+const { Content } = await render(entry);
+const [use] = attrUses([a.key]);
+const roles = rolesUsing(a.key);
+---
+<Base title={a.name} description={a.summary}>
+  <p><a href={href('/attributes')}>← Attributes</a></p>
+  <h1>{a.name}</h1>
+  <p><span class="badge" data-phase>{CAT_NAME[a.cat]}</span></p>
+  <p class="lead">{a.summary}</p>
+  <div class="prose"><Content /></div>
+  <h2>How the simulation uses it</h2>
+  {use.rules.length ? (
+    <table class="model">
+      <thead><tr><th>Behaviour</th><th>Formula</th><th>Unit</th><th>Source</th><th>Note</th></tr></thead>
+      <tbody>
+        {use.rules.map((r) => (
+          <tr>
+            <td>{RULE_LABEL[r.key as keyof typeof RULE_LABEL]}</td>
+            <td><code>{r.formula}</code></td>
+            <td>{r.unit}</td>
+            <td><span class="badge" data-src={r.src}>{r.src.toUpperCase()}</span></td>
+            <td>{r.note}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  ) : (
+    <p>The simulation does not use this attribute yet.</p>
+  )}
+  <p>n(v) = (v − 1) / 19 maps an attribute from 1–20 onto 0–1.</p>
+  {roles.length > 0 && (
+    <>
+      <h2>Roles that rely on it</h2>
+      <ul class="attr-list">
+        {roles.map((r) => <li><a data-key-attr={r.key.includes(a.key) ? '' : undefined} href={href(`/roles/${r.id}`)}>{r.name}</a></li>)}
+      </ul>
+    </>
+  )}
+</Base>

@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+import PitchLab from '../lab/PitchLab';
+import { BASE } from '../lib/site';
+---
+<Base title="Lab" description="Sandbox: pick formations, roles and instructions for both teams and watch the simulation play.">
+  <h1>Lab</h1>
+  <p class="lead">A free sandbox. Choose formations on the Team tab, pick any player as the focus to change his roles, attributes and instructions, and switch on overlays on the View tab.</p>
+  <PitchLab client:only="react" sceneId="sandbox" mode="sandbox" base={BASE} />
+</Base>

@@ -1,0 +1,25 @@
+---
+import Base from '../layouts/Base.astro';
+import { href } from '../lib/site';
+import { ROLES, teamInstructions, playerInstructions, concepts, attributes } from '@tb/content';
+
+const sections = [
+  { path: '/roles', title: 'Roles', text: `All ${ROLES.length} in- and out-of-possession roles, each with a live scene.` },
+  { path: '/instructions', title: 'Instructions', text: `${teamInstructions.length} team and ${playerInstructions.length} player instructions, and what they change on the pitch.` },
+  { path: '/concepts', title: 'Concepts', text: `${concepts.length} principles: rest-defence, width, box occupation, pressing coherence and more.` },
+  { path: '/attributes', title: 'Attributes', text: `How each of the ${attributes.length} attributes drives behaviour in the simulation.` },
+  { path: '/lab', title: 'Lab', text: 'A free sandbox: pick formations, roles and instructions for both teams and watch it play.' },
+];
+---
+<Base title="FM27 Tactical Bible">
+  <h1>FM27 Tactical Bible</h1>
+  <p class="lead">
+    Roles, instructions and tactical concepts for Football Manager 27, explained with a live 2D simulation.
+    Change a player's attributes, role or instructions and watch what changes, for him and for the team.
+  </p>
+  <ul class="cards">
+    {sections.map((s) => (
+      <li><a class="card" href={href(s.path)}><h3>{s.title}</h3><p>{s.text}</p></a></li>
+    ))}
+  </ul>
+</Base>

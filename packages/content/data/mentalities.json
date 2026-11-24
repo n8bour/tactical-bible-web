@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Very Defensive",
+    "desc": "A very deep block, minimum risk. To protect narrow leads or in heavily outmatched games."
+  },
+  {
+    "name": "Defensive",
+    "desc": "Prioritises solidity and cautious transitions. The away underdog."
+  },
+  {
+    "name": "Cautious",
+    "desc": "Balanced but prudent; slower, more patient possession."
+  },
+  {
+    "name": "Balanced",
+    "desc": "A neutral starting point; instructions and roles define the character."
+  },
+  {
+    "name": "Positive",
+    "desc": "Proactive without extremes: pushes lines up, more controlled risk. A great default for favourites."
+  },
+  {
+    "name": "Attacking",
+    "desc": "More width, tempo and risk. Watch your rest-defence."
+  },
+  {
+    "name": "Very Attacking",
+    "desc": "All-out attack. Use it late on when you need goals; it leaves transitions very exposed."
+  }
+]

@@ -1,0 +1,15 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import { href } from '../../lib/site';
+
+const concepts = (await getCollection('concepts')).map((e) => e.data);
+---
+<Base title="Concepts">
+  <h1>Concepts</h1>
+  <ul class="cards">
+    {concepts.map((c) => (
+      <li><a class="card" href={href(`/concepts/${c.key}`)}><h3>{c.name}</h3><p>{c.summary}</p></a></li>
+    ))}
+  </ul>
+</Base>

@@ -1,0 +1,650 @@
+[
+  {
+    "key": "passing",
+    "name": "Passing Directness",
+    "phase": "IP",
+    "area": "General",
+    "options": [
+      "Much Shorter",
+      "Shorter",
+      "Balanced",
+      "More Direct",
+      "Much More Direct"
+    ],
+    "default": 2,
+    "cx": 1,
+    "desc": "Average pass length.",
+    "pro": "Short: keeps the ball and tires the opponent. Direct: gets forward fast and ignores the press.",
+    "con": "Short demands Passing/Technique/Composure from everyone. Direct loses more balls without a target/pace up front.",
+    "need": {
+      "low": [
+        "pas",
+        "tec",
+        "cmp",
+        "fir"
+      ],
+      "high": [
+        "hea",
+        "str",
+        "otb",
+        "pac"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "prog"
+  },
+  {
+    "key": "tempo",
+    "name": "Tempo",
+    "phase": "IP",
+    "area": "General",
+    "options": [
+      "Much Lower",
+      "Lower",
+      "Balanced",
+      "Higher",
+      "Much Higher"
+    ],
+    "default": 2,
+    "cx": 1,
+    "desc": "Speed of decision-making on the ball.",
+    "pro": "High: catches the opponent disorganised. Low: control and patience.",
+    "con": "High + short passing demands high Decisions/Technique; more tiring.",
+    "need": {
+      "high": [
+        "dec",
+        "tec",
+        "fir",
+        "sta"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "prog"
+  },
+  {
+    "key": "width",
+    "name": "Attacking Width",
+    "phase": "IP",
+    "area": "General",
+    "options": [
+      "Much Narrower",
+      "Narrower",
+      "Balanced",
+      "Wider",
+      "Much Wider"
+    ],
+    "default": 2,
+    "cx": 1,
+    "desc": "How wide the team is in possession.",
+    "pro": "Wide: stretches the opponent’s block and opens inside channels. Narrow: central combinations.",
+    "con": "Wide makes reacting to a turnover harder (counter-press). Narrow makes it easier for the opponent to close the middle.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "final"
+  },
+  {
+    "key": "creative",
+    "name": "Creative Freedom",
+    "phase": "IP",
+    "area": "General",
+    "options": [
+      "More Disciplined",
+      "Balanced",
+      "More Expressive"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Freedom to deviate from the plan.",
+    "pro": "Expressive: top players find solutions. Disciplined: predictable, safe execution.",
+    "con": "Expressive with players weak in Decisions/Flair = chaos.",
+    "need": {
+      "high": [
+        "dec",
+        "fla",
+        "vis"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "prog"
+  },
+  {
+    "key": "att_trans",
+    "name": "Attacking Transition",
+    "phase": "IP",
+    "area": "Transition",
+    "options": [
+      "Hold Shape",
+      "Balanced",
+      "Counter-Attack"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "What to do after winning the ball.",
+    "pro": "Counter: exploits a disorganised defence. Hold Shape: resets and takes control of possession.",
+    "con": "Counter without pace/outlets leads to quick turnovers.",
+    "need": {
+      "high": [
+        "pac",
+        "acc",
+        "otb"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "win"
+  },
+  {
+    "key": "set_pieces",
+    "name": "Play for Set Pieces",
+    "phase": "IP",
+    "area": "General",
+    "options": [
+      "Keep Ball in Play",
+      "Balanced",
+      "Play for Set Pieces"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Try to win, or avoid winning, corners and free kicks (new in FM27).",
+    "pro": "Play for Set Pieces pays off with good headers and set-piece takers.",
+    "con": "Keep Ball in Play keeps the tempo but wastes a weapon if you are strong in the air.",
+    "need": null,
+    "fm27": true,
+    "unconf": true,
+    "scenePhase": "final"
+  },
+  {
+    "key": "timewaste",
+    "name": "Time Wasting",
+    "phase": "IP",
+    "area": "General",
+    "options": [
+      "Less",
+      "Balanced",
+      "More"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Managing the clock.",
+    "pro": "Useful when winning late on.",
+    "con": "Can irritate opponents/the referee; breaks your own team’s rhythm.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "final"
+  },
+  {
+    "key": "reception",
+    "name": "Pass Reception",
+    "phase": "IP",
+    "area": "Progression",
+    "options": [
+      "Pass into Space",
+      "Balanced",
+      "Pass to Feet"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Pass into space or to feet (new in FM26).",
+    "pro": "To feet: control. Into space: depth and speed.",
+    "con": "To feet against a high press demands First Touch/Composure. Into space demands Off the Ball/Acceleration.",
+    "need": {
+      "low": [
+        "otb",
+        "acc"
+      ],
+      "high": [
+        "fir",
+        "cmp",
+        "tec"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "prog"
+  },
+  {
+    "key": "buildup",
+    "name": "Build-up Strategy",
+    "phase": "IP",
+    "area": "Build-up",
+    "options": [
+      "Play Through Press",
+      "Balanced",
+      "Bypass Press"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Play out short through the press or bypass it (new in FM26).",
+    "pro": "Through: draws in and breaks the press. Bypass: minimum risk at the back.",
+    "con": "Through with technically weak GK/centre-backs = goals conceded. Bypass loses possession.",
+    "need": {
+      "low": [
+        "pas",
+        "cmp",
+        "fir",
+        "dec"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "build"
+  },
+  {
+    "key": "goal_kicks",
+    "name": "Goal Kicks",
+    "phase": "IP",
+    "area": "Build-up",
+    "options": [
+      "Short",
+      "Mixed",
+      "Long"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Type of goal kick.",
+    "pro": "Short: starts the build-up. Long: skips the press to the target.",
+    "con": "Short against a high press with defenders weak on the ball is risky.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "build"
+  },
+  {
+    "key": "gk_speed",
+    "name": "GK Distribution Speed",
+    "phase": "IP",
+    "area": "Build-up",
+    "options": [
+      "Slow Pace Down",
+      "Balanced",
+      "Distribute Quickly"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Goalkeeper distribution speed.",
+    "pro": "Quick feeds counter-attacks.",
+    "con": "Quick with the team out of position loses the ball.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "build"
+  },
+  {
+    "key": "gk_target",
+    "name": "GK Distribution",
+    "phase": "IP",
+    "area": "Build-up",
+    "options": [
+      "Centre-Backs",
+      "Full-Backs",
+      "Balanced",
+      "Flanks",
+      "Target Forward"
+    ],
+    "default": 2,
+    "cx": 0.5,
+    "desc": "Where the goalkeeper distributes.",
+    "pro": "Direct the ball to your strength (a technical centre-back, a quick wing-back, a tall striker).",
+    "con": "Predictable: the opponent can set a trap.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "build"
+  },
+  {
+    "key": "support_runs",
+    "name": "Supporting Runs",
+    "phase": "IP",
+    "area": "Progression",
+    "options": [
+      "Underlap",
+      "Balanced",
+      "Overlap"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Full-backs/wing-backs support inside (underlap) or outside (overlap).",
+    "pro": "Overlap with inside wingers; underlap with wide wingers.",
+    "con": "It clashes with the role: a W with overlaps crowds the channel.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "final"
+  },
+  {
+    "key": "dribbling",
+    "name": "Dribbling",
+    "phase": "IP",
+    "area": "Progression",
+    "options": [
+      "Discourage",
+      "Balanced",
+      "Encourage"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "How often players carry/dribble the ball.",
+    "pro": "Encourage with quality dribblers.",
+    "con": "Encouraging with poor Dribbling = turnovers in dangerous areas.",
+    "need": {
+      "high": [
+        "dri",
+        "agi",
+        "fla"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "prog"
+  },
+  {
+    "key": "progress",
+    "name": "Progress Through",
+    "phase": "IP",
+    "area": "Progression",
+    "options": [
+      "Left",
+      "Balanced",
+      "Centre",
+      "Right"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Preferred zone for progressing the ball.",
+    "pro": "Focus on the side of your best player or the opponent’s weak spot.",
+    "con": "Predictable; the opponent can overload that side.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "prog"
+  },
+  {
+    "key": "patience",
+    "name": "Final Third Patience",
+    "phase": "IP",
+    "area": "Final third",
+    "options": [
+      "Hit Early Crosses",
+      "Balanced",
+      "Work Ball Into Box"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Deliver early crosses into the box or patiently work the ball into shooting positions.",
+    "pro": "Work Ball Into Box: higher-quality chances. Hit Early Crosses: catches the defence before it sets.",
+    "con": "Work Ball Into Box against a low block can produce sterile possession; Hit Early Crosses wastes possession without good targets.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "final"
+  },
+  {
+    "key": "long_shots",
+    "name": "Shots from Distance",
+    "phase": "IP",
+    "area": "Final third",
+    "options": [
+      "Discourage",
+      "Balanced",
+      "Encourage"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "How often players shoot from outside the box.",
+    "pro": "Encourage with good shooters against low blocks.",
+    "con": "Poor shots waste possession.",
+    "need": {
+      "high": [
+        "lon",
+        "tec"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "final"
+  },
+  {
+    "key": "crossing",
+    "name": "Crossing Style",
+    "phase": "IP",
+    "area": "Final third",
+    "options": [
+      "Low Crosses",
+      "Balanced",
+      "Whipped Crosses",
+      "Floated Crosses"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Type of cross.",
+    "pro": "Low for quick strikers; Floated for aerial targets.",
+    "con": "Floated without players strong in the air is a waste.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "final"
+  },
+  {
+    "key": "loe",
+    "name": "Line of Engagement",
+    "phase": "OOP",
+    "area": "Pressing",
+    "options": [
+      "Low Block",
+      "Mid Block",
+      "High Press"
+    ],
+    "default": 1,
+    "cx": 1.5,
+    "desc": "Where the team starts pressing.",
+    "pro": "High: wins the ball near the opponent’s goal. Low: compact block, invites them out.",
+    "con": "High demands Stamina/Work Rate; disconnected from the defensive line it opens space between the lines.",
+    "need": {
+      "high": [
+        "wor",
+        "sta",
+        "acc",
+        "agg"
+      ]
+    },
+    "fm27": true,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "dline",
+    "name": "Defensive Line",
+    "phase": "OOP",
+    "area": "Block",
+    "options": [
+      "Much Lower",
+      "Lower",
+      "Standard",
+      "Higher",
+      "Much Higher"
+    ],
+    "default": 2,
+    "cx": 1,
+    "desc": "Height of the defensive line.",
+    "pro": "High: compact team, opponent far from goal. Low: protects the space in behind.",
+    "con": "High needs quick centre-backs and a Sweeper Keeper. Low invites pressure and shots.",
+    "need": {
+      "high": [
+        "pac",
+        "acc",
+        "ant",
+        "pos"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "trigger",
+    "name": "Trigger Press",
+    "phase": "OOP",
+    "area": "Pressing",
+    "options": [
+      "Much Less",
+      "Less",
+      "Balanced",
+      "More",
+      "Much More"
+    ],
+    "default": 2,
+    "cx": 1,
+    "desc": "How often players trigger the press.",
+    "pro": "More: high recoveries, chaos for the opponent.",
+    "con": "Physically draining; uncoordinated pressing is easily beaten.",
+    "need": {
+      "high": [
+        "wor",
+        "sta",
+        "agg",
+        "ant",
+        "tea"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "def_trans",
+    "name": "Defensive Transition",
+    "phase": "OOP",
+    "area": "Transition",
+    "options": [
+      "Regroup",
+      "Balanced",
+      "Counter-Press"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Immediate reaction to losing the ball.",
+    "pro": "Counter-Press: wins the ball back before the opponent organises. Regroup: protects the shape.",
+    "con": "Counter-Press with a very open/tired team gets played through in transition.",
+    "need": {
+      "high": [
+        "wor",
+        "sta",
+        "acc",
+        "tea"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "loss"
+  },
+  {
+    "key": "tackling",
+    "name": "Tackling",
+    "phase": "OOP",
+    "area": "Duels",
+    "options": [
+      "Stay On Feet",
+      "Balanced",
+      "Get Stuck In"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Aggression in the tackle.",
+    "pro": "Get Stuck In wins more duels.",
+    "con": "More fouls and cards; dangerous with defenders who have low Tackling.",
+    "need": {
+      "high": [
+        "tck",
+        "agg",
+        "bra"
+      ]
+    },
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "press_trap",
+    "name": "Pressing Trap",
+    "phase": "OOP",
+    "area": "Pressing",
+    "options": [
+      "Inside",
+      "Balanced",
+      "Outside"
+    ],
+    "default": 1,
+    "cx": 1,
+    "desc": "Where the ball carrier is forced (mid block/high press).",
+    "pro": "Outside: corners them on the flank. Inside: forces them into a crowded middle.",
+    "con": "Outside without aggressive full-backs/wingers does not close the trap; Inside needs a strong midfield.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "cross_eng",
+    "name": "Cross Engagement",
+    "phase": "OOP",
+    "area": "Low block",
+    "options": [
+      "Invite Crosses",
+      "Balanced",
+      "Stop Crosses"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Allow or stop crosses (low block).",
+    "pro": "Invite: with centre-backs dominant in the air. Stop: with short defenders.",
+    "con": "Invite without centre-backs strong in the air = headed goals.",
+    "need": null,
+    "fm27": false,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "short_gk",
+    "name": "Short Goalkeeper Distribution",
+    "phase": "OOP",
+    "area": "Pressing",
+    "options": [
+      "No",
+      "Yes"
+    ],
+    "default": 0,
+    "cx": 0.5,
+    "desc": "Press the opposing keeper’s short distribution (High Press section).",
+    "pro": "Yes forces the opponent to go long.",
+    "con": "It means pushing strikers and midfielders up — more space in behind.",
+    "need": null,
+    "fm27": true,
+    "unconf": false,
+    "scenePhase": "oop"
+  },
+  {
+    "key": "dl_behaviour",
+    "name": "Defensive Line Behaviour",
+    "phase": "OOP",
+    "area": "Block",
+    "options": [
+      "Drop Off",
+      "Balanced",
+      "Step Up"
+    ],
+    "default": 1,
+    "cx": 0.5,
+    "desc": "Whether the line drops to protect depth or steps up to squeeze space (new in FM27).",
+    "pro": "Step Up: compact team, catches players offside. Drop Off: protects the space in behind.",
+    "con": "Step Up with slow centre-backs is dangerous; Drop Off separates the defence from midfield.",
+    "need": null,
+    "fm27": true,
+    "unconf": true,
+    "scenePhase": "oop"
+  }
+]
