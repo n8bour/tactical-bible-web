@@ -5,20 +5,13 @@ import pis from '../../data/player-instructions.json';
 import tis from '../../data/team-instructions.json';
 import { FORMATIONS } from '../knowledge';
 import { DEFAULT_ROLE, groupOf, ROLE_BY_ID, ROLES } from '../roles/valid';
-import { attackPlay, away, buildScene, home, throughPlay, type Scene, type SceneOpts } from './builder';
+import { attackPlay, away, buildScene, home, type Scene, type SceneOpts } from './builder';
+import { roleClip } from './roleClips';
 
 const F433 = '4-3-3 DM Wide';
 const F4231 = '4-2-3-1 Wide';
 
 export const ROLE_HOME = anchors as Record<string, { formation: string; slot: string }>;
-
-/** Phase where an IP role's typical movement shows best. */
-function ipPhase(roleId: string, slot: string): Phase {
-  const r = ROLE_BY_ID[roleId];
-  if (r.movePhase === 'build' || r.movePhase === 'prog' || r.movePhase === 'final') return r.movePhase;
-  const g = groupOf(slot);
-  return ['GK', 'DC', 'D_LR'].includes(g) ? 'build' : ['ST', 'AM_LR', 'AMC'].includes(g) ? 'final' : 'prog';
-}
 
 export interface RoleSceneOpts {
   formation: string;
@@ -29,31 +22,23 @@ export interface RoleSceneOpts {
   attrs?: Partial<Record<AttrKey, number>>;
 }
 
-/** Scripted final-third move for central forwards; everyone else uses the generic set-up passes. */
-function forwardBeats(formation: string, slot: string, tags: string[], groups: string[]) {
-  const central = groups.some((g) => g === 'ST') && groupOf(slot) === 'ST';
-  if (!central || tags.some((t) => t === 'DROP' || t === 'CR')) return undefined;
-  return tags.includes('RUN') ? throughPlay(formation, slot) : attackPlay(formation, 'final', 0);
-}
-
-/** One player in one position: his team attacking (with the ball) or the opponent attacking his zone (without it). */
+/** One player in one position: his role's dedicated clip, with the ball (his team attacking) or without it (the opponent attacking). */
 export function roleScene(o: RoleSceneOpts): Scene {
-  const r = ROLE_BY_ID[o.roleIP];
-  const isGK = o.slot === 'GK';
+  const roleId = o.withBall ? o.roleIP : o.roleOOP;
+  const clip = roleClip(roleId, o.formation, o.slot);
   return buildScene({
-    id: `role-${o.withBall ? o.roleIP : o.roleOOP}`,
-    title: ROLE_BY_ID[o.withBall ? o.roleIP : o.roleOOP].name,
+    id: `role-${roleId}`,
+    title: ROLE_BY_ID[roleId].name,
     formation: o.formation,
     roles: { [o.slot]: [o.roleIP, o.roleOOP] },
     focus: home(o.slot),
-    phase: o.withBall ? ipPhase(o.roleIP, o.slot) : 'oop',
-    oppAttack: !o.withBall && !isGK,
-    ballToFocus: o.withBall && (r.tags.some((t) => t === 'CR' || t === 'LINK' || t === 'DROP') || ['AM_LR', 'M_LR'].includes(groupOf(o.slot))),
-    beats: o.withBall ? forwardBeats(o.formation, o.slot, r.tags, r.groups) : undefined,
-    focusStart: o.withBall && forwardBeats(o.formation, o.slot, r.tags, r.groups) && r.tags.includes('RUN') ? { x: 80, y: (FORMATIONS[o.formation].find((s) => s.code === o.slot)?.x ?? 50) * 0.68 } : undefined,
+    phase: clip.phase,
+    ballStart: { owner: clip.owner, at: clip.at },
+    beats: clip.beats,
     attrs: o.attrs ? { [home(o.slot)]: o.attrs } : undefined,
-    duration: 14,
+    duration: 16,
     clip: true,
+    strict: true,
   });
 }
 
@@ -68,7 +53,7 @@ function defaultRoleScene(r: (typeof ROLES)[number]): Scene {
     roleOOP: r.phase === 'OOP' ? r.id : defaultFor(a.slot, 'OOP'),
     withBall: r.phase === 'IP',
   });
-  return { ...s, duration: 12, lesson: { text: r.moveNote ? `Watch the ${r.ab}: ${r.moveNote}.` : r.desc } };
+  return { ...s, lesson: { text: r.moveNote ? `Watch the ${r.ab}: ${r.moveNote}.` : r.desc } };
 }
 
 export interface BoardOpts {

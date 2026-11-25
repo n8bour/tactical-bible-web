@@ -111,7 +111,7 @@ export function targetsFor(world: WorldState, a: AgentState, phase: Phase): Targ
   const trap = (tm.trapSide ?? 0) * 3;
   let y = mid + (slot.x * 0.68 - mid) * 0.82 + (ball.y - mid) * (isGK ? 0.1 : 0.35);
   if (!isGK && Math.abs(slot.x - 50) > 25) y -= side * trap;
-  const err = attr('oopSlotErr', a.spec.attrs);
+  const err = world.scene.strict ? 0 : attr('oopSlotErr', a.spec.attrs);
   depth += isGK ? prof.oop.holdLine * (L / 34) : prof.oop.holdLine;
   if (!isGK) {
     if (prof.oop.outletDepth != null) depth = Math.max(depth, prof.oop.outletDepth);

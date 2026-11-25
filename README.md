@@ -17,7 +17,7 @@ Every role and instruction page embeds a live 2D pitch: change a player's attrib
 ### Pages
 
 - **Tactics board** (`/tactics`): choose your shapes with and without the ball, the opponent, mentality and every team instruction. "In possession" shows your team attacking, "Out of possession" shows the opponent attacking your block. Instruction pages deep-link into it (`?tab=ip|oop&ti=key:option`, `&pi=key&slot=CODE`).
-- **Role explorer** (every `/roles/<id>` page): pick formation and position, the role with and without the ball, then change attributes. The same move replays beside a faded default player and a "What changes" box lists the model numbers before/after and what he did differently.
+- **Role explorer** (every `/roles/<id>` page): pick formation and position, the role with and without the ball, then change attributes. Each role has its own short, looping clip (`packages/content/src/scenes/roleClips.ts`): only the scripted ball and the role's signature move act (an overlap, a press, a drop into the back line, staying up for the outlet), while everybody else just takes his tactical position. Clips work from any position the role fits; team-mates are picked by position code, and the script is mirrored for the other flank. The same clip replays beside a faded default player, and a "What changes" box lists the model numbers before/after and what he did differently.
 - **Instruction pages**: a static, build-time before/after diagram computed from the simulation, plus an "Open in tactics board" button.
 - **Concept pages**: explanatory pitch diagrams; interactive only where a control teaches something (width, pressing coherence, IP/OOP, rest-defence, box, outlets).
 - **Sandbox** (`/lab`): free play on either team.
@@ -31,7 +31,7 @@ Node 22 or newer.
 ```bash
 npm install
 npm run dev -w apps/web     # local dev server
-npm test                    # Vitest: sim behaviour + instruction effects + coverage
+npm test                    # Vitest: sim behaviour + instruction effects + coverage + every role clip in every position plays through
 npm run typecheck           # tsc for sim/content, astro check for the web app
 npm run build               # static site in apps/web/dist (PWA included)
 npm run e2e                 # Playwright: Stay Wider widens the winger against the baseline

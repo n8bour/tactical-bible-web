@@ -1,8 +1,8 @@
 /// <reference path="./globals.d.ts" />
 import { decideOffBall, decideOnBall, DT, isUrgent, steer } from './agent';
 import { attr, n } from './attributes';
-import { agentById, emit, giveBall, kick, rand, shoot, updateBall } from './ball';
-import { dist, frame, PITCH } from './geom';
+import { agentById, AIR_PASS_D, emit, giveBall, kick, passTime, rand, shoot, updateBall } from './ball';
+import { clampPitch, dist, frame, PITCH } from './geom';
 import { resolveMods, teamMods } from './mods';
 import { gauss } from './rng';
 import { phaseOf, targetsFor } from './tactics';
@@ -92,26 +92,32 @@ function updateTactics(w: WorldState) {
     a.planTarget = frame(a.spec.team, t.plan);
     a.impulseTarget = frame(a.spec.team, t.impulse);
     if (a.intent.kind === 'shape' || w.t === 0) {
-      const adh = attr('shapeAdherence', a.spec.attrs);
+      const adh = w.scene.strict ? 1 : attr('shapeAdherence', a.spec.attrs);
       a.intent = { kind: 'shape', target: { x: a.impulseTarget.x + (a.planTarget.x - a.impulseTarget.x) * adh, y: a.impulseTarget.y + (a.planTarget.y - a.impulseTarget.y) * adh } };
     }
   }
 }
 
-/** The most recent applied beat that is not a run (runs don't hold the play up). */
+/** The most recent applied beat that is not a run or mark (those don't hold the play up). */
 function lastAction(script: Beat[], idx: number): Beat | undefined {
-  for (let i = idx - 1; i >= 0; i--) if (script[i].kind !== 'run') return script[i];
+  for (let i = idx - 1; i >= 0; i--) if (script[i].kind !== 'run' && script[i].kind !== 'mark') return script[i];
   return undefined;
 }
 
-/** A beat waits for its passer to have the ball (and for a carry to arrive); it gives up after 4 s. */
+/** A beat waits `wait` seconds after the previous one and for its passer to have the ball (and a carry to arrive); it gives up after 4 s. */
 function beatReady(w: WorldState, beat: Beat, prev: Beat | undefined): boolean {
   if (beat.t > w.t) return false;
-  if (beat.kind === 'run' || w.t - Math.max(beat.t, w.beatAt) > 4) return true;
+  const offBall = beat.kind === 'run' || beat.kind === 'mark';
+  if (w.t - w.beatAt < (beat.wait ?? (offBall ? 0 : 0.35))) return false;
+  // Strict clips give a ball into space longer to wait for its runner.
+  if (offBall || w.t - Math.max(beat.t, w.beatAt) > (w.scene.strict ? 8 : 4)) return true;
   if (w.ball.owner !== beat.from) return false;
   const a = agentById(w, beat.from);
   if (prev?.kind === 'carry' && prev.from === beat.from && prev.target && a && dist(a.pos, prev.target) > 3) return false;
-  return w.t - w.beatAt > 0.35;
+  // A ball into space leaves when it would reach the spot no sooner than the runner does.
+  const r = w.scene.strict && beat.kind === 'pass' && beat.target ? agentById(w, beat.to ?? null) : undefined;
+  if (r && a && passTime(dist(a.pos, beat.target!)) < dist(r.pos, beat.target!) / attr('topSpeed', r.spec.attrs, { stamina: r.stamina }) - 0.2) return false;
+  return true;
 }
 
 function applyBeat(w: WorldState, beat: Beat) {
@@ -120,21 +126,29 @@ function applyBeat(w: WorldState, beat: Beat) {
   w.beatAt = w.t;
   if (beat.kind === 'run') {
     const tgt = beat.target ?? a.pos;
-    a.intent = { kind: 'run', run: 'box_centre', target: { ...tgt }, startAt: w.t + 0.15, until: w.t + 12 };
-    a.runCooldown = w.t + 12;
+    const until = w.t + (beat.dur ?? 12);
+    a.intent = { kind: 'run', run: 'box_centre', target: { ...tgt }, startAt: w.t + 0.15, until };
+    a.runCooldown = until;
     emit(w, 'run', a);
+    return;
+  }
+  if (beat.kind === 'mark') {
+    const until = w.t + (beat.dur ?? 12);
+    a.intent = { kind: 'mark', target: { ...a.pos }, follow: beat.to, gap: beat.gap ?? 2, until };
+    a.runCooldown = until;
+    if ((beat.gap ?? 2) <= 1.5) emit(w, 'press', a);
     return;
   }
   if (w.ball.owner !== a.spec.id) giveBall(w, a);
   const to = agentById(w, beat.to ?? null);
   const lead = (r: AgentState): Vec => ({ x: r.pos.x + r.vel.x * 0.6, y: r.pos.y + r.vel.y * 0.6 });
-  const target = beat.target ?? (to ? lead(to) : frame(a.spec.team, { x: PITCH.len - 10, y: PITCH.wid / 2 }));
+  const target = clampPitch(beat.target ?? (to ? lead(to) : frame(a.spec.team, { x: PITCH.len - 10, y: PITCH.wid / 2 })), 2);
   a.heading = Math.atan2(target.y - a.pos.y, target.x - a.pos.x);
   const pressure = 0;
   switch (beat.kind) {
     case 'pass': {
       const d = dist(a.pos, target);
-      kick(w, a, target, d > 32 ? 'air' : 'ground', { intended: to?.spec.id, pressure, endSpeed: 5, exact: true });
+      kick(w, a, target, d > AIR_PASS_D ? 'air' : 'ground', { intended: to?.spec.id, pressure, endSpeed: 5, exact: true });
       w.ball.scripted = !!to;
       emit(w, 'pass', a, { to: to?.spec.id });
       if (to) to.intent = { kind: 'receive', target, until: w.t + 4 };
@@ -151,10 +165,13 @@ function applyBeat(w: WorldState, beat: Beat) {
     case 'shot':
       shoot(w, a, pressure);
       break;
-    case 'carry':
-      a.intent = { kind: 'carry', target, until: w.t + 4.5 };
-      a.lastDecisionT = w.t + 4.5;
+    case 'carry': {
+      // Clip carries last until they arrive; free-play carries are re-decided after 4.5 s.
+      const hold = w.scene.strict ? 10 : 4.5;
+      a.intent = { kind: 'carry', target, until: w.t + hold };
+      a.lastDecisionT = w.t + hold;
       break;
+    }
   }
 }
 
@@ -203,7 +220,7 @@ export function step(w: WorldState, dt = DT): void {
   if (w.tick % 5 === 1) updateTactics(w);
   w.possession = w.ball.owner ? agentById(w, w.ball.owner)!.spec.team : w.ball.lastTeam ?? w.possession;
 
-  if (w.ball.intended && !w.ball.owner && w.t - w.ball.releasedAt > 3) {
+  if (w.ball.intended && !w.ball.owner && w.t - w.ball.releasedAt > (w.scene.strict ? 5 : 3)) {
     w.ball.intended = null;
     w.ball.scripted = false;
   }
@@ -215,7 +232,7 @@ export function step(w: WorldState, dt = DT): void {
     const interval = attr('decisionInterval', a.spec.attrs) * (owner ? tm.tempo : 1);
     if (owner) {
       if (!scripted && w.t >= w.ball.controlUntil && w.t - a.lastDecisionT >= interval) {
-        if (w.scene.clip && a.spec.id !== w.scene.focus) {
+        if (w.scene.strict || (w.scene.clip && a.spec.id !== w.scene.focus)) {
           a.lastDecisionT = w.t;
           a.intent = { kind: 'hold', target: { ...a.pos } };
         } else decideOnBall(w, a, resolveMods(tm, a.spec, phase, w.know));
@@ -231,10 +248,23 @@ export function step(w: WorldState, dt = DT): void {
       const idx = carrier ? w.agents.indexOf(carrier) : -1;
       a.intent.target = idx >= 0 ? { ...(w.history[lag]?.[idx] ?? carrier!.pos) } : { ...(w.ballHistory[lag] ?? w.ball.pos) };
     }
+    if (a.intent.follow) {
+      const f = agentById(w, a.intent.follow);
+      if (f) {
+        const goal = frame(team, { x: 0, y: PITCH.wid / 2 });
+        const l = dist(goal, f.pos) || 1;
+        const gap = a.intent.gap ?? 2;
+        a.intent.target = { x: f.pos.x + ((goal.x - f.pos.x) / l) * gap, y: f.pos.y + ((goal.y - f.pos.y) / l) * gap };
+      }
+    }
     const b = w.ball;
     if (a.intent.kind === 'receive' && b.intended === a.spec.id && !b.owner) {
       const sp2 = b.vel.x * b.vel.x + b.vel.y * b.vel.y;
-      if (b.kind === 'air' && b.target) a.intent.target = { ...b.target };
+      if (w.scene.strict && b.target) {
+        // Clip receivers go to the spot the pass is aimed at, then meet the ball.
+        const ahead = dist(b.pos, b.target) > 3 && (b.target.x - b.pos.x) * b.vel.x + (b.target.y - b.pos.y) * b.vel.y > 0;
+        a.intent.target = ahead ? { ...b.target } : { ...b.pos };
+      } else if (b.kind === 'air' && b.target) a.intent.target = { ...b.target };
       else if (sp2 > 0.25) {
         const u = ((a.pos.x - b.pos.x) * b.vel.x + (a.pos.y - b.pos.y) * b.vel.y) / sp2;
         if (u < 0 && dist(a.pos, b.pos) > 2) {
@@ -248,7 +278,8 @@ export function step(w: WorldState, dt = DT): void {
     const waiting = a.intent.kind === 'run' && w.t < (a.intent.startAt ?? 0);
     const target = waiting ? a.pos : a.intent.target;
     const before = { ...a.pos };
-    steer(a, target, dt, isUrgent(a.intent.kind), owner, a.intent.kind === 'press' || a.intent.kind === 'chase' || a.intent.kind === 'receive');
+    const pursue = a.intent.kind === 'press' || a.intent.kind === 'chase' || (a.intent.kind === 'receive' && !w.scene.strict);
+    steer(a, target, dt, isUrgent(a.intent.kind) || !!a.intent.follow, owner, pursue);
     const s = w.stats[a.spec.id];
     const f = frame(team, a.pos);
     s.dist += dist(before, a.pos);

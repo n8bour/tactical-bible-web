@@ -23,6 +23,14 @@ function launchSpeed(d: number, vEnd: number): number {
   return lo;
 }
 const CONTROL_R = 1.0;
+/** Scripted passes longer than this go in the air. */
+export const AIR_PASS_D = 32;
+
+/** Seconds a scripted pass (end speed 5 m/s) needs to cover `d` metres: flight time in the air, roll time on the ground. */
+export function passTime(d: number): number {
+  if (d > AIR_PASS_D) return d / (14 + d * 0.15);
+  return Math.log((FRICTION + DRAG * launchSpeed(d, 5)) / (FRICTION + DRAG * 5)) / DRAG;
+}
 
 export const rand = (w: WorldState) => next(w.rng);
 
@@ -246,7 +254,8 @@ export function updateBall(w: WorldState, dt: number) {
     if (b.scripted && a.spec.id !== b.intended) continue;
     if (w.scene.calmTeam === a.spec.team && b.lastTeam !== a.spec.team) continue;
     const isGK = a.spec.slot === 'GK';
-    const r = b.kind === 'shot' ? (isGK ? 0 : 0.6) : isGK ? CONTROL_R * 1.4 : CONTROL_R;
+    const reach = b.scripted && w.scene.strict ? 2.5 : CONTROL_R;
+    const r = b.kind === 'shot' ? (isGK ? 0 : 0.6) : isGK ? reach * 1.4 : reach;
     const d = dist(a.pos, b.pos);
     if (d <= r && d < bd) { bd = d; best = a; }
   }
@@ -258,6 +267,8 @@ export function updateBall(w: WorldState, dt: number) {
 
 function aerialContest(w: WorldState) {
   const b = w.ball;
+  // A scripted pass lands for its receiver; only crosses and clearances are contested.
+  if (b.scripted) return;
   // Players jump for where the ball is going to come down, not where it is a few metres earlier.
   const spot = b.target && dist(b.pos, b.target) < 8 ? b.target : b.pos;
   const near = w.agents.filter((a) => dist(a.pos, spot) < (a.spec.slot === 'GK' ? attr('gkReach', a.spec.attrs) * 0.6 : 1.8));
@@ -270,7 +281,8 @@ function aerialContest(w: WorldState) {
   if (teams.size > 1 && att && def) {
     const gk = def.spec.slot === 'GK';
     const pAtt = gk ? 0.35 - 0.2 * n(def.spec.attrs.cmd) : attr('aerialWin', att.spec.attrs, { opp: def.spec.attrs });
-    winner = w.scene.clip || rand(w) < pAtt ? att : def;
+    // In clips the scripted attacker wins the header, unless the defender is the player being shown.
+    winner = w.scene.clip ? (def.spec.id === w.scene.focus ? def : att) : rand(w) < pAtt ? att : def;
     emit(w, 'aerial', winner);
   }
   const p = frame(winner.spec.team, winner.pos);

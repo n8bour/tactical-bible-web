@@ -26,11 +26,11 @@ export interface SceneOpts {
   mentality?: number;
   /** teaching clip: nothing random happens beyond the script and the selected player */
   clip?: boolean;
+  /** role clip: everyone only takes his tactical position; only the script acts */
+  strict?: boolean;
   /** override who starts with the ball and where (world metres) */
   ballStart?: { owner: string; at: Vec };
-  /** where the focus player starts, instead of his tactical position */
-  focusStart?: Vec;
-  beats?: Array<{ t: number; kind: Beat['kind']; from: string; to?: string; target?: Vec }>;
+  beats?: Beat[];
   duration?: number;
   lesson?: SceneLesson;
 }
@@ -139,13 +139,14 @@ export function buildScene(o: SceneOpts): Scene {
     home: { formationIP: o.formation, formationOOP: oopForm, mentality: o.mentality ?? 3, tis: { ...(o.tis ?? {}) }, agents: team(0, o.formation, oopForm, o.roles ?? {}, o.focus, o.attrs, o.pis) },
     away: { formationIP: awayForm, formationOOP: awayForm, mentality: 3, tis: { ...(o.awayTis ?? {}) }, agents: team(1, awayForm, awayForm, {}, null, o.attrs, o.pis) },
     ball: { owner: open.owner },
-    start: { [open.owner]: open.at, ...(o.focusStart ? { [o.focus]: o.focusStart } : {}) },
+    start: { [open.owner]: open.at },
     focus: o.focus,
     script: (o.beats ?? open.beats).map((b) => ({ ...b })),
     duration: o.duration ?? 12,
     phaseStart: o.phase,
     ...(o.phase === 'oop' ? {} : { calmTeam: 1 as const }),
     ...(o.clip ? { clip: true } : {}),
+    ...(o.strict ? { strict: true } : {}),
     ...(o.lesson ? { lesson: o.lesson } : {}),
   };
 }
@@ -175,18 +176,6 @@ export function attackPlay(formation: string, startFrom: 'build' | 'prog' | 'fin
   if (late !== cm) out.push({ t: 0.6, kind: 'run', from: id(late), target: at(86, 34) });
   out.push({ t: 0.6, kind: 'cross', from: id(wide), to: id(st), target: at(96, 32) });
   return out;
-}
-
-/** A ball played in behind for a striker who runs the channel: run first, then the pass into his path. */
-export function throughPlay(formation: string, focus: string): Beats {
-  const has = (c: string) => FORMATIONS[formation].some((s) => s.code === c) && c !== focus;
-  const cm = ['MCL', 'MC', 'MCR', 'DML', 'AMC'].find(has) ?? 'GK';
-  const y = FORMATIONS[formation].find((s) => s.code === focus)!.x * 0.68;
-  const target = { x: 94, y: 34 + (y - 34) * 0.5 };
-  return [
-    { t: 0.6, kind: 'run', from: home(focus), target },
-    { t: 0.6, kind: 'pass', from: home(cm), to: home(focus), target },
-  ];
 }
 
 export { home, away };

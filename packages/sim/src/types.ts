@@ -145,7 +145,19 @@ export interface TeamSpec {
   agents: AgentSpec[];
 }
 
-export type Beat = { t: number; kind: 'pass' | 'carry' | 'shot' | 'cross' | 'clear' | 'run'; from: string; to?: string; target?: Vec };
+export type Beat = {
+  t: number;
+  kind: 'pass' | 'carry' | 'shot' | 'cross' | 'clear' | 'run' | 'mark';
+  from: string;
+  to?: string;
+  target?: Vec;
+  /** seconds after the previous beat before this one starts (default 0.35; runs and marks default 0) */
+  wait?: number;
+  /** run/mark: how long the player keeps doing it (default 12 s) */
+  dur?: number;
+  /** mark: metres goal-side of the followed player; about 1 is a press */
+  gap?: number;
+};
 
 export interface SceneSpec {
   id: string;
@@ -161,6 +173,8 @@ export interface SceneSpec {
   calmTeam?: TeamId;
   /** teaching clip: only scripted actions and the selected player act; everyone else holds shape (no random runs, chases or carries) */
   clip?: boolean;
+  /** role clip: every off-ball player only takes his tactical position; only scripted beats act (no runs, presses, marking or jitter) */
+  strict?: boolean;
   /** optional start positions in world metres; otherwise agents start on their phase target */
   start?: Record<string, Vec>;
   note?: string;
@@ -192,6 +206,9 @@ export interface Intent {
   run?: RunKind;
   startAt?: number;
   until?: number;
+  /** mark: follow this agent goal-side at `gap` metres */
+  follow?: string;
+  gap?: number;
 }
 
 export interface AgentState {

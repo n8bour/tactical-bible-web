@@ -280,6 +280,15 @@ export function decideOffBall(w: WorldState, a: AgentState, phase: Phase) {
 
   if (a.intent.kind === 'receive' && b.intended === a.spec.id && b.owner === null && w.t < (a.intent.until ?? 0)) return;
 
+  if (w.scene.strict) {
+    a.pressing = false;
+    if ((a.intent.kind === 'run' || a.intent.follow) && w.t < (a.intent.until ?? 0)) return;
+    if (a.spec.slot !== 'GK' || isIP(phase)) {
+      a.intent = { kind: 'shape', target: { ...a.planTarget } };
+      return;
+    }
+  }
+
   if (!w.scene.clip && !b.owner && b.intended === null && b.kind !== 'shot') {
     const mine = w.agents.filter((o) => o.spec.team === team && o.spec.slot !== 'GK').sort((p, q) => dist(p.pos, b.pos) - dist(q.pos, b.pos));
     if (mine[0] === a) {
