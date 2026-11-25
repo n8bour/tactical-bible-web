@@ -157,6 +157,8 @@ export interface SceneSpec {
   focus: string;
   script: Beat[];
   duration: number;
+  /** this team only holds its shape: it never presses or takes the ball (keeps attacking lessons readable) */
+  calmTeam?: TeamId;
   /** optional start positions in world metres; otherwise agents start on their phase target */
   start?: Record<string, Vec>;
   note?: string;

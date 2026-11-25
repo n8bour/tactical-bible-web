@@ -244,6 +244,7 @@ export function updateBall(w: WorldState, dt: number) {
   for (const a of w.agents) {
     if (a.spec.id === b.lastTouch && w.t - b.releasedAt < 0.3) continue;
     if (b.scripted && a.spec.id !== b.intended) continue;
+    if (w.scene.calmTeam === a.spec.team && b.lastTeam !== a.spec.team) continue;
     const isGK = a.spec.slot === 'GK';
     const r = b.kind === 'shot' ? (isGK ? 0 : 0.6) : isGK ? CONTROL_R * 1.4 : CONTROL_R;
     const d = dist(a.pos, b.pos);

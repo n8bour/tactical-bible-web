@@ -13,7 +13,7 @@ import { AttrSlider, roleLabel, SelectField } from './Controls';
 import { WhyPanel } from './PitchLab';
 import { type OverlayKey } from './PitchRenderer';
 import { Stage } from './Stage';
-import { useLab } from './useLab';
+import { clipDone, useLab } from './useLab';
 
 const ATTR_NAME: Record<string, string> = Object.fromEntries(attributes.map((a) => [a.key, a.name]));
 const FORMATION_NAMES = Object.keys(FORMATIONS).filter((f) => f !== OPP_FORMATION);
@@ -118,8 +118,7 @@ export default function RoleExplorer({ roleId, base = '' }: { roleId: string; ba
   const baseline = useMemo(() => (changedKeys.length ? roleScene({ formation, slot, roleIP, roleOOP, withBall }) : null), [key]);
   const lab = useLab(scene, key, {
     loop: true,
-    // One lesson per loop: restart 1.5 s after the situation is over (ball lost with it, or won back without it).
-    restartWhen: (w) => (withBall ? w.possession === 1 && w.t - w.teams[0].lostAt > 1.5 : w.possession === 0 && w.t - w.teams[1].lostAt > 1.5),
+    restartWhen: clipDone,
     baseline,
     focusOnly: true,
     overlays: withBall ? { vision: true, runs: true, trail: true } : { vision: false, runs: false, pressure: true, shape: true, trail: true },

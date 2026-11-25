@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react';
 import { roleLabel, SelectField, SwitchRow } from './Controls';
 import { OVERLAYS, type OverlayKey } from './PitchRenderer';
 import { Stage } from './Stage';
-import { useLab, type LabApi } from './useLab';
+import { clipDone, useLab, type LabApi } from './useLab';
 
 const FORMATION_NAMES = Object.keys(FORMATIONS).filter((f) => f !== OPP_FORMATION);
 const OVERLAY_LABEL: Record<OverlayKey, string> = {
@@ -91,7 +91,7 @@ export default function TacticsBoard({ base = '' }: { base?: string }) {
   const baseline = useMemo(() => (compareDefaults && changed ? boardScene({ ...opts, tis: {}, pis: {} }) : null), [compareDefaults, JSON.stringify(cfg)]);
   const lab = useLab(scene, JSON.stringify(cfg) + compareDefaults, {
     loop: true,
-    restartWhen: (w) => (cfg.attack ? w.possession === 1 && w.t - w.teams[0].lostAt > 2 : w.possession === 0 && w.t - w.teams[1].lostAt > 2),
+    restartWhen: clipDone,
     baseline,
     overlays: cfg.attack ? { runs: true, lines: false, pressure: false, vision: false } : { runs: false, lines: true, pressure: true, vision: false },
   });

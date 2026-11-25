@@ -1,11 +1,11 @@
-import type { AttrKey, Phase, PIKey } from '@tb/sim';
+import { frame, type AttrKey, type Phase, type PIKey } from '@tb/sim';
 import anchors from '../../data/role-anchors.json';
 import concepts from '../../data/concepts.json';
 import pis from '../../data/player-instructions.json';
 import tis from '../../data/team-instructions.json';
 import { FORMATIONS } from '../knowledge';
 import { DEFAULT_ROLE, groupOf, ROLE_BY_ID, ROLES } from '../roles/valid';
-import { attackPlay, buildScene, home, throughPlay, type Scene, type SceneOpts } from './builder';
+import { attackPlay, away, buildScene, home, throughPlay, type Scene, type SceneOpts } from './builder';
 
 const F433 = '4-3-3 DM Wide';
 const F4231 = '4-2-3-1 Wide';
@@ -33,7 +33,7 @@ export interface RoleSceneOpts {
 function forwardBeats(formation: string, slot: string, tags: string[], groups: string[]) {
   const central = groups.some((g) => g === 'ST') && groupOf(slot) === 'ST';
   if (!central || tags.some((t) => t === 'DROP' || t === 'CR')) return undefined;
-  return tags.includes('RUN') ? throughPlay(formation, slot) : attackPlay(formation, 'final');
+  return tags.includes('RUN') ? throughPlay(formation, slot) : attackPlay(formation, 'final', 0);
 }
 
 /** One player in one position: his team attacking (with the ball) or the opponent attacking his zone (without it). */
@@ -96,9 +96,12 @@ export function boardScene(o: BoardOpts): Scene {
     roles: o.roles,
     pis: Object.fromEntries(Object.entries(o.pis).map(([code, keys]) => [home(code), keys])),
     focus: home(o.focus),
-    phase: o.attack ? 'build' : 'oop',
-    beats: o.attack ? attackPlay(o.formationIP) : undefined,
-    duration: 22,
+    phase: o.attack ? 'prog' : 'oop',
+    beats: o.attack ? attackPlay(o.formationIP, 'prog', 0) : attackPlay(o.awayFormation, 'prog', 1),
+    ballStart: o.attack
+      ? { owner: home(FORMATIONS[o.formationIP].some((s) => s.code === 'DCL') ? 'DCL' : 'DC'), at: { x: 30, y: 26 } }
+      : { owner: away(FORMATIONS[o.awayFormation].some((s) => s.code === 'DCR') ? 'DCR' : 'DC'), at: frame(1, { x: 30, y: 26 }) },
+    duration: 16,
   });
 }
 

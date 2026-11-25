@@ -349,7 +349,7 @@ export function decideOffBall(w: WorldState, a: AgentState, phase: Phase) {
     const inLoe = !scripted && (seen.x < m.team.loe + 12 || phase === 'loss');
     const closer = w.agents.filter((o) => o.spec.team === team && o !== a && o.spec.slot !== 'GK' && dist(o.pos, carrier.pos) < dist(a.pos, carrier.pos)).length;
     options.push({ kind: 'press', to: carrier.spec.id, target: carrier.pos, utility: radius - d, terms: { radius, distance: -d } });
-    if (d < radius && inLoe && closer < 2) {
+    if (d < radius && inLoe && closer < 2 && w.scene.calmTeam !== team) {
       if (!a.pressing) emit(w, 'press', a);
       a.pressing = true;
       a.intent = { kind: 'press', target: { ...carrier.pos } };

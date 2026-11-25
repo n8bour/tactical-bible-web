@@ -24,6 +24,8 @@ export interface SceneOpts {
   pis?: Partial<Record<string, PIKey[]>>;
   attrs?: Partial<Record<string, Partial<Record<AttrKey, number>>>>;
   mentality?: number;
+  /** override who starts with the ball and where (world metres) */
+  ballStart?: { owner: string; at: Vec };
   /** where the focus player starts, instead of his tactical position */
   focusStart?: Vec;
   beats?: Array<{ t: number; kind: Beat['kind']; from: string; to?: string; target?: Vec }>;
@@ -127,7 +129,7 @@ export function buildScene(o: SceneOpts): Scene {
   const code = o.focus.replace(/^h_/, '');
   const awayForm = o.awayFormation ?? OPP_FORMATION;
   const oopForm = o.formationOOP ?? o.formation;
-  const open = opening(o.formation, awayForm, o.phase, code, !!o.oppAttack, !!o.ballToFocus);
+  const open = o.ballStart ? { ...opening(o.formation, awayForm, o.phase, code, !!o.oppAttack, !!o.ballToFocus), ...o.ballStart } : opening(o.formation, awayForm, o.phase, code, !!o.oppAttack, !!o.ballToFocus);
   return {
     id: o.id,
     title: o.title,
@@ -140,6 +142,7 @@ export function buildScene(o: SceneOpts): Scene {
     script: (o.beats ?? open.beats).map((b) => ({ ...b })),
     duration: o.duration ?? 12,
     phaseStart: o.phase,
+    ...(o.phase === 'oop' ? {} : { calmTeam: 1 as const }),
     ...(o.lesson ? { lesson: o.lesson } : {}),
   };
 }
@@ -147,27 +150,27 @@ export function buildScene(o: SceneOpts): Scene {
 type Beats = NonNullable<SceneOpts['beats']>;
 
 /**
- * One simple attacking move for the lesson: out from the keeper, up the middle, wide, a carry to the byline area, then a cross
- * while the striker, the far-side winger and a late midfielder attack the box. After the cross the players are free.
+ * One simple attacking move: ball played wide, a carry towards the byline, then a cross while the striker, the far-side winger
+ * and a late midfielder attack the box. Coordinates are in the attacking team's own frame (it attacks towards x = 105).
  */
-export function attackPlay(formation: string, startFrom: 'build' | 'final' = 'build'): Beats {
+export function attackPlay(formation: string, startFrom: 'build' | 'prog' | 'final' = 'prog', team: 0 | 1 = 0): Beats {
   const has = (c: string) => FORMATIONS[formation].some((s) => s.code === c);
   const pick = (...cs: string[]) => cs.find(has) ?? 'GK';
+  const id = (c: string) => (team === 0 ? home(c) : away(c));
+  const at = (x: number, y: number): Vec => frame(team, { x, y });
   const cb = pick('DCL', 'DC', 'DCR'), cm = pick('MCL', 'MC', 'MCR', 'DML');
   const wide = pick('AML', 'ML', 'WBL', 'AMCL'), far = pick('AMR', 'MR', 'WBR', 'AMCR');
   const st = pick('ST', 'STL', 'AMC'), late = pick('MCR', 'MC', 'MCL');
   const out: Beats = [];
-  const pass = (from: string, to: string) => out.push({ t: 0.6, kind: 'pass', from: home(from), to: home(to) });
-  if (startFrom === 'build') {
-    pass('GK', cb);
-    pass(cb, cm);
-  }
+  const pass = (from: string, to: string) => out.push({ t: 0.6, kind: 'pass', from: id(from), to: id(to) });
+  if (startFrom === 'build') pass('GK', cb);
+  if (startFrom !== 'final') pass(cb, cm);
   pass(cm, wide);
-  out.push({ t: 0.6, kind: 'carry', from: home(wide), target: { x: 88, y: 9 } });
-  out.push({ t: 0.6, kind: 'run', from: home(st), target: { x: 96, y: 32 } });
-  out.push({ t: 0.6, kind: 'run', from: home(far), target: { x: 95, y: 44 } });
-  if (late !== cm) out.push({ t: 0.6, kind: 'run', from: home(late), target: { x: 86, y: 34 } });
-  out.push({ t: 0.6, kind: 'cross', from: home(wide), to: home(st), target: { x: 96, y: 32 } });
+  out.push({ t: 0.6, kind: 'carry', from: id(wide), target: at(88, 9) });
+  out.push({ t: 0.6, kind: 'run', from: id(st), target: at(96, 32) });
+  out.push({ t: 0.6, kind: 'run', from: id(far), target: at(95, 44) });
+  if (late !== cm) out.push({ t: 0.6, kind: 'run', from: id(late), target: at(86, 34) });
+  out.push({ t: 0.6, kind: 'cross', from: id(wide), to: id(st), target: at(96, 32) });
   return out;
 }
 

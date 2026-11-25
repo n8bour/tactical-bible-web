@@ -98,6 +98,12 @@ function updateTactics(w: WorldState) {
   }
 }
 
+/** The most recent applied beat that is not a run (runs don't hold the play up). */
+function lastAction(script: Beat[], idx: number): Beat | undefined {
+  for (let i = idx - 1; i >= 0; i--) if (script[i].kind !== 'run') return script[i];
+  return undefined;
+}
+
 /** A beat waits for its passer to have the ball (and for a carry to arrive); it gives up after 4 s. */
 function beatReady(w: WorldState, beat: Beat, prev: Beat | undefined): boolean {
   if (beat.t > w.t) return false;
@@ -186,7 +192,7 @@ export function step(w: WorldState, dt = DT): void {
   w.t = Math.round((w.t + dt) * 1e6) / 1e6;
   w.tick++;
   const script = w.scene.script;
-  while (w.scriptIdx < script.length && beatReady(w, script[w.scriptIdx], script[w.scriptIdx - 1])) applyBeat(w, script[w.scriptIdx++]);
+  while (w.scriptIdx < script.length && beatReady(w, script[w.scriptIdx], lastAction(script, w.scriptIdx))) applyBeat(w, script[w.scriptIdx++]);
   const scripted = w.scriptIdx < script.length;
 
   w.history.unshift(w.agents.map((a) => ({ ...a.pos })));

@@ -5,6 +5,9 @@ import { OVERLAYS, PitchRenderer, type OverlayKey } from './PitchRenderer';
 
 const TRAIL_TICKS = 6 / DT;
 
+/** A short scripted clip is over once its last action is done and the tail has played out. */
+export const clipDone = (w: WorldState) => w.scriptIdx >= w.scene.script.length && w.t - w.beatAt > 2.5;
+
 export interface LabOptions {
   /** Fixed comparison world (ghosts). When given, compare mode is always on and uses this scene. */
   baseline?: Scene | null;
