@@ -120,8 +120,8 @@ function applyBeat(w: WorldState, beat: Beat) {
   w.beatAt = w.t;
   if (beat.kind === 'run') {
     const tgt = beat.target ?? a.pos;
-    a.intent = { kind: 'run', run: 'box_centre', target: { ...tgt }, startAt: w.t + 0.15, until: w.t + 5 };
-    a.runCooldown = w.t + 5;
+    a.intent = { kind: 'run', run: 'box_centre', target: { ...tgt }, startAt: w.t + 0.15, until: w.t + 12 };
+    a.runCooldown = w.t + 12;
     emit(w, 'run', a);
     return;
   }
@@ -134,7 +134,7 @@ function applyBeat(w: WorldState, beat: Beat) {
   switch (beat.kind) {
     case 'pass': {
       const d = dist(a.pos, target);
-      kick(w, a, target, d > 32 ? 'air' : 'ground', { intended: to?.spec.id, pressure, endSpeed: 5 });
+      kick(w, a, target, d > 32 ? 'air' : 'ground', { intended: to?.spec.id, pressure, endSpeed: 5, exact: true });
       w.ball.scripted = !!to;
       emit(w, 'pass', a, { to: to?.spec.id });
       if (to) to.intent = { kind: 'receive', target, until: w.t + 4 };
@@ -160,7 +160,7 @@ function applyBeat(w: WorldState, beat: Beat) {
 
 function duels(w: WorldState) {
   const owner = agentById(w, w.ball.owner);
-  if (!owner) return;
+  if (!owner || w.scene.clip) return;
   for (const d of w.agents) {
     if (d.spec.team === owner.spec.team || !d.pressing || w.t - d.lastTackleT < 0.7) continue;
     if (dist(d.pos, owner.pos) > 2.0) continue;
@@ -215,7 +215,10 @@ export function step(w: WorldState, dt = DT): void {
     const interval = attr('decisionInterval', a.spec.attrs) * (owner ? tm.tempo : 1);
     if (owner) {
       if (!scripted && w.t >= w.ball.controlUntil && w.t - a.lastDecisionT >= interval) {
-        decideOnBall(w, a, resolveMods(tm, a.spec, phase, w.know));
+        if (w.scene.clip && a.spec.id !== w.scene.focus) {
+          a.lastDecisionT = w.t;
+          a.intent = { kind: 'hold', target: { ...a.pos } };
+        } else decideOnBall(w, a, resolveMods(tm, a.spec, phase, w.know));
       } else if (scripted && a.intent.kind !== 'carry') {
         a.intent = { kind: 'hold', target: { ...a.pos } };
       }

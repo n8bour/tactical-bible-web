@@ -280,7 +280,7 @@ export function decideOffBall(w: WorldState, a: AgentState, phase: Phase) {
 
   if (a.intent.kind === 'receive' && b.intended === a.spec.id && b.owner === null && w.t < (a.intent.until ?? 0)) return;
 
-  if (!b.owner && b.intended === null && b.kind !== 'shot') {
+  if (!w.scene.clip && !b.owner && b.intended === null && b.kind !== 'shot') {
     const mine = w.agents.filter((o) => o.spec.team === team && o.spec.slot !== 'GK').sort((p, q) => dist(p.pos, b.pos) - dist(q.pos, b.pos));
     if (mine[0] === a) {
       a.intent = { kind: 'chase', target: { ...b.pos } };
@@ -289,7 +289,7 @@ export function decideOffBall(w: WorldState, a: AgentState, phase: Phase) {
   }
 
   if (isIP(phase)) {
-    if (a.intent.kind === 'run' && w.t < (a.intent.until ?? 0) && dist(a.pos, a.intent.target) > 1.5) return;
+    if (a.intent.kind === 'run' && w.t < (a.intent.until ?? 0) && (w.scene.clip || dist(a.pos, a.intent.target) > 1.5)) return;
     const runs = [...m.profile.runs];
     if (m.player.channelRun) runs.push({ kind: 'channel', phase: 'final', p: 0.6 }, { kind: 'channel', phase: 'prog', p: 0.5 });
     if (m.player.lateRun) runs.push({ kind: 'late_box', phase: 'final', p: 0.8 });
@@ -302,7 +302,7 @@ export function decideOffBall(w: WorldState, a: AgentState, phase: Phase) {
     const carrierFwd = settled || passing;
     const runPh = phase === 'win' ? ['prog', 'final'] : [phase];
     const supP = m.team.supportRunsP ?? 0;
-    if (!m.player.holdRuns && carrier !== a && carrierFwd && w.t > a.runCooldown) {
+    if (!w.scene.clip && !m.player.holdRuns && carrier !== a && carrierFwd && w.t > a.runCooldown) {
       for (const r of runs) {
         if (r.kind === 'hold' || !runPh.includes(r.phase)) continue;
         const p = clamp(r.p * 0.45 + supP, 0, 0.95);

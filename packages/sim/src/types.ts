@@ -159,6 +159,8 @@ export interface SceneSpec {
   duration: number;
   /** this team only holds its shape: it never presses or takes the ball (keeps attacking lessons readable) */
   calmTeam?: TeamId;
+  /** teaching clip: only scripted actions and the selected player act; everyone else holds shape (no random runs, chases or carries) */
+  clip?: boolean;
   /** optional start positions in world metres; otherwise agents start on their phase target */
   start?: Record<string, Vec>;
   note?: string;

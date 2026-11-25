@@ -24,6 +24,8 @@ export interface SceneOpts {
   pis?: Partial<Record<string, PIKey[]>>;
   attrs?: Partial<Record<string, Partial<Record<AttrKey, number>>>>;
   mentality?: number;
+  /** teaching clip: nothing random happens beyond the script and the selected player */
+  clip?: boolean;
   /** override who starts with the ball and where (world metres) */
   ballStart?: { owner: string; at: Vec };
   /** where the focus player starts, instead of his tactical position */
@@ -143,6 +145,7 @@ export function buildScene(o: SceneOpts): Scene {
     duration: o.duration ?? 12,
     phaseStart: o.phase,
     ...(o.phase === 'oop' ? {} : { calmTeam: 1 as const }),
+    ...(o.clip ? { clip: true } : {}),
     ...(o.lesson ? { lesson: o.lesson } : {}),
   };
 }

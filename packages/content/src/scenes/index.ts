@@ -53,6 +53,7 @@ export function roleScene(o: RoleSceneOpts): Scene {
     focusStart: o.withBall && forwardBeats(o.formation, o.slot, r.tags, r.groups) && r.tags.includes('RUN') ? { x: 80, y: (FORMATIONS[o.formation].find((s) => s.code === o.slot)?.x ?? 50) * 0.68 } : undefined,
     attrs: o.attrs ? { [home(o.slot)]: o.attrs } : undefined,
     duration: 14,
+    clip: true,
   });
 }
 
@@ -102,6 +103,7 @@ export function boardScene(o: BoardOpts): Scene {
       ? { owner: home(FORMATIONS[o.formationIP].some((s) => s.code === 'DCL') ? 'DCL' : 'DC'), at: { x: 30, y: 26 } }
       : { owner: away(FORMATIONS[o.awayFormation].some((s) => s.code === 'DCR') ? 'DCR' : 'DC'), at: frame(1, { x: 30, y: 26 }) },
     duration: 16,
+    clip: true,
   });
 }
 

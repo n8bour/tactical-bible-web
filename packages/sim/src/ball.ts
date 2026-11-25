@@ -61,7 +61,7 @@ export function giveBall(w: WorldState, a: AgentState) {
 export type KickKind = 'ground' | 'air' | 'shot';
 
 /** Release the ball from its owner toward a world-frame target with the kicker's execution error. */
-export function kick(w: WorldState, a: AgentState, target: Vec, kind: KickKind, opts: { intended?: string; pressure: number; cross?: boolean; header?: boolean; flight?: number; endSpeed?: number }) {
+export function kick(w: WorldState, a: AgentState, target: Vec, kind: KickKind, opts: { intended?: string; pressure: number; cross?: boolean; header?: boolean; flight?: number; endSpeed?: number; exact?: boolean }) {
   const b = w.ball;
   const at = a.spec.attrs;
   const from = { ...a.pos };
@@ -72,8 +72,8 @@ export function kick(w: WorldState, a: AgentState, target: Vec, kind: KickKind, 
   }
   let ang = Math.atan2(tgt.y - from.y, tgt.x - from.x);
   const d = Math.max(1, dist(from, tgt));
-  if (kind !== 'shot' && !opts.cross) ang += (gauss(() => rand(w)) * attr('passAngleErr', at, { pressure: opts.pressure }) * Math.PI) / 180;
-  const sErr = 1 + gauss(() => rand(w)) * attr('passSpeedErr', at);
+  if (kind !== 'shot' && !opts.cross && !opts.exact) ang += (gauss(() => rand(w)) * attr('passAngleErr', at, { pressure: opts.pressure }) * Math.PI) / 180;
+  const sErr = opts.exact ? 1 : 1 + gauss(() => rand(w)) * attr('passSpeedErr', at);
   b.owner = null;
   b.lastTouch = a.spec.id;
   b.lastTeam = a.spec.team;
@@ -270,7 +270,7 @@ function aerialContest(w: WorldState) {
   if (teams.size > 1 && att && def) {
     const gk = def.spec.slot === 'GK';
     const pAtt = gk ? 0.35 - 0.2 * n(def.spec.attrs.cmd) : attr('aerialWin', att.spec.attrs, { opp: def.spec.attrs });
-    winner = rand(w) < pAtt ? att : def;
+    winner = w.scene.clip || rand(w) < pAtt ? att : def;
     emit(w, 'aerial', winner);
   }
   const p = frame(winner.spec.team, winner.pos);
