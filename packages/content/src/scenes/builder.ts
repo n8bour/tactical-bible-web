@@ -24,6 +24,8 @@ export interface SceneOpts {
   pis?: Partial<Record<string, PIKey[]>>;
   attrs?: Partial<Record<string, Partial<Record<AttrKey, number>>>>;
   mentality?: number;
+  /** where the focus player starts, instead of his tactical position */
+  focusStart?: Vec;
   beats?: Array<{ t: number; kind: Beat['kind']; from: string; to?: string; target?: Vec }>;
   duration?: number;
   lesson?: SceneLesson;
@@ -133,13 +135,52 @@ export function buildScene(o: SceneOpts): Scene {
     home: { formationIP: o.formation, formationOOP: oopForm, mentality: o.mentality ?? 3, tis: { ...(o.tis ?? {}) }, agents: team(0, o.formation, oopForm, o.roles ?? {}, o.focus, o.attrs, o.pis) },
     away: { formationIP: awayForm, formationOOP: awayForm, mentality: 3, tis: { ...(o.awayTis ?? {}) }, agents: team(1, awayForm, awayForm, {}, null, o.attrs, o.pis) },
     ball: { owner: open.owner },
-    start: { [open.owner]: open.at },
+    start: { [open.owner]: open.at, ...(o.focusStart ? { [o.focus]: o.focusStart } : {}) },
     focus: o.focus,
     script: (o.beats ?? open.beats).map((b) => ({ ...b })),
     duration: o.duration ?? 12,
     phaseStart: o.phase,
     ...(o.lesson ? { lesson: o.lesson } : {}),
   };
+}
+
+type Beats = NonNullable<SceneOpts['beats']>;
+
+/**
+ * One simple attacking move for the lesson: out from the keeper, up the middle, wide, a carry to the byline area, then a cross
+ * while the striker, the far-side winger and a late midfielder attack the box. After the cross the players are free.
+ */
+export function attackPlay(formation: string, startFrom: 'build' | 'final' = 'build'): Beats {
+  const has = (c: string) => FORMATIONS[formation].some((s) => s.code === c);
+  const pick = (...cs: string[]) => cs.find(has) ?? 'GK';
+  const cb = pick('DCL', 'DC', 'DCR'), cm = pick('MCL', 'MC', 'MCR', 'DML');
+  const wide = pick('AML', 'ML', 'WBL', 'AMCL'), far = pick('AMR', 'MR', 'WBR', 'AMCR');
+  const st = pick('ST', 'STL', 'AMC'), late = pick('MCR', 'MC', 'MCL');
+  const out: Beats = [];
+  const pass = (from: string, to: string) => out.push({ t: 0.6, kind: 'pass', from: home(from), to: home(to) });
+  if (startFrom === 'build') {
+    pass('GK', cb);
+    pass(cb, cm);
+  }
+  pass(cm, wide);
+  out.push({ t: 0.6, kind: 'carry', from: home(wide), target: { x: 88, y: 9 } });
+  out.push({ t: 0.6, kind: 'run', from: home(st), target: { x: 96, y: 32 } });
+  out.push({ t: 0.6, kind: 'run', from: home(far), target: { x: 95, y: 44 } });
+  if (late !== cm) out.push({ t: 0.6, kind: 'run', from: home(late), target: { x: 86, y: 34 } });
+  out.push({ t: 0.6, kind: 'cross', from: home(wide), to: home(st), target: { x: 96, y: 32 } });
+  return out;
+}
+
+/** A ball played in behind for a striker who runs the channel: run first, then the pass into his path. */
+export function throughPlay(formation: string, focus: string): Beats {
+  const has = (c: string) => FORMATIONS[formation].some((s) => s.code === c) && c !== focus;
+  const cm = ['MCL', 'MC', 'MCR', 'DML', 'AMC'].find(has) ?? 'GK';
+  const y = FORMATIONS[formation].find((s) => s.code === focus)!.x * 0.68;
+  const target = { x: 94, y: 34 + (y - 34) * 0.5 };
+  return [
+    { t: 0.6, kind: 'run', from: home(focus), target },
+    { t: 0.6, kind: 'pass', from: home(cm), to: home(focus), target },
+  ];
 }
 
 export { home, away };

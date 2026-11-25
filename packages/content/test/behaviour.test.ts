@@ -2,7 +2,7 @@ import { createWorld, setPI, setTI, step, type PIKey, type WorldState } from '@t
 import { describe, expect, it } from 'vitest';
 import { KNOWLEDGE, PI_EFFECTS, playerInstructions, ROLE_PROFILES, ROLES, SCENES, TI_EFFECTS, teamInstructions } from '../src';
 
-const SEEDS = [1, 2, 3, 4, 5];
+const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 /** Runs the scene once per seed and pools the samples, so one chaotic replay can't decide a test. */
 function run(sceneId: string, setup: (w: WorldState) => void, seconds: number, sample: (w: WorldState) => number | null, tis: Record<string, number> = {}) {

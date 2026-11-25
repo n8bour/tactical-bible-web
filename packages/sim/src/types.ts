@@ -145,7 +145,7 @@ export interface TeamSpec {
   agents: AgentSpec[];
 }
 
-export type Beat = { t: number; kind: 'pass' | 'carry' | 'shot' | 'cross' | 'clear'; from: string; to?: string; target?: Vec };
+export type Beat = { t: number; kind: 'pass' | 'carry' | 'shot' | 'cross' | 'clear' | 'run'; from: string; to?: string; target?: Vec };
 
 export interface SceneSpec {
   id: string;
@@ -273,6 +273,8 @@ export interface WorldState {
   ballHistory: Vec[];
   stats: Record<string, AgentStats>;
   scriptIdx: number;
+  /** time the last scripted beat was applied */
+  beatAt: number;
   firstShotT: number | null;
   know: Knowledge;
 }

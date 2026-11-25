@@ -38,6 +38,7 @@ export function createWorld(sceneIn: SceneSpec, know: Knowledge): WorldState {
     ballHistory: [],
     stats: {},
     scriptIdx: 0,
+    beatAt: 0,
     firstShotT: null,
     know,
   } as unknown as WorldState;
@@ -97,9 +98,27 @@ function updateTactics(w: WorldState) {
   }
 }
 
+/** A beat waits for its passer to have the ball (and for a carry to arrive); it gives up after 4 s. */
+function beatReady(w: WorldState, beat: Beat, prev: Beat | undefined): boolean {
+  if (beat.t > w.t) return false;
+  if (beat.kind === 'run' || w.t - Math.max(beat.t, w.beatAt) > 4) return true;
+  if (w.ball.owner !== beat.from) return false;
+  const a = agentById(w, beat.from);
+  if (prev?.kind === 'carry' && prev.from === beat.from && prev.target && a && dist(a.pos, prev.target) > 3) return false;
+  return w.t - w.beatAt > 0.35;
+}
+
 function applyBeat(w: WorldState, beat: Beat) {
   const a = agentById(w, beat.from);
   if (!a) return;
+  w.beatAt = w.t;
+  if (beat.kind === 'run') {
+    const tgt = beat.target ?? a.pos;
+    a.intent = { kind: 'run', run: 'box_centre', target: { ...tgt }, startAt: w.t + 0.15, until: w.t + 5 };
+    a.runCooldown = w.t + 5;
+    emit(w, 'run', a);
+    return;
+  }
   if (w.ball.owner !== a.spec.id) giveBall(w, a);
   const to = agentById(w, beat.to ?? null);
   const lead = (r: AgentState): Vec => ({ x: r.pos.x + r.vel.x * 0.6, y: r.pos.y + r.vel.y * 0.6 });
@@ -109,14 +128,14 @@ function applyBeat(w: WorldState, beat: Beat) {
   switch (beat.kind) {
     case 'pass': {
       const d = dist(a.pos, target);
-      kick(w, a, target, d > 32 ? 'air' : 'ground', { intended: to?.spec.id, pressure });
+      kick(w, a, target, d > 32 ? 'air' : 'ground', { intended: to?.spec.id, pressure, endSpeed: 5 });
       w.ball.scripted = !!to;
       emit(w, 'pass', a, { to: to?.spec.id });
       if (to) to.intent = { kind: 'receive', target, until: w.t + 4 };
       break;
     }
     case 'cross':
-      kick(w, a, target, 'air', { pressure, cross: true });
+      kick(w, a, target, 'air', { pressure });
       emit(w, 'cross', a);
       break;
     case 'clear':
@@ -127,8 +146,8 @@ function applyBeat(w: WorldState, beat: Beat) {
       shoot(w, a, pressure);
       break;
     case 'carry':
-      a.intent = { kind: 'carry', target, until: w.t + 2.5 };
-      a.lastDecisionT = w.t + 2;
+      a.intent = { kind: 'carry', target, until: w.t + 4.5 };
+      a.lastDecisionT = w.t + 4.5;
       break;
   }
 }
@@ -167,7 +186,7 @@ export function step(w: WorldState, dt = DT): void {
   w.t = Math.round((w.t + dt) * 1e6) / 1e6;
   w.tick++;
   const script = w.scene.script;
-  while (w.scriptIdx < script.length && script[w.scriptIdx].t <= w.t) applyBeat(w, script[w.scriptIdx++]);
+  while (w.scriptIdx < script.length && beatReady(w, script[w.scriptIdx], script[w.scriptIdx - 1])) applyBeat(w, script[w.scriptIdx++]);
   const scripted = w.scriptIdx < script.length;
 
   w.history.unshift(w.agents.map((a) => ({ ...a.pos })));

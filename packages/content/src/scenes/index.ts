@@ -3,8 +3,9 @@ import anchors from '../../data/role-anchors.json';
 import concepts from '../../data/concepts.json';
 import pis from '../../data/player-instructions.json';
 import tis from '../../data/team-instructions.json';
+import { FORMATIONS } from '../knowledge';
 import { DEFAULT_ROLE, groupOf, ROLE_BY_ID, ROLES } from '../roles/valid';
-import { buildScene, home, type Scene, type SceneOpts } from './builder';
+import { attackPlay, buildScene, home, throughPlay, type Scene, type SceneOpts } from './builder';
 
 const F433 = '4-3-3 DM Wide';
 const F4231 = '4-2-3-1 Wide';
@@ -28,6 +29,13 @@ export interface RoleSceneOpts {
   attrs?: Partial<Record<AttrKey, number>>;
 }
 
+/** Scripted final-third move for central forwards; everyone else uses the generic set-up passes. */
+function forwardBeats(formation: string, slot: string, tags: string[], groups: string[]) {
+  const central = groups.some((g) => g === 'ST') && groupOf(slot) === 'ST';
+  if (!central || tags.some((t) => t === 'DROP' || t === 'CR')) return undefined;
+  return tags.includes('RUN') ? throughPlay(formation, slot) : attackPlay(formation, 'final');
+}
+
 /** One player in one position: his team attacking (with the ball) or the opponent attacking his zone (without it). */
 export function roleScene(o: RoleSceneOpts): Scene {
   const r = ROLE_BY_ID[o.roleIP];
@@ -40,7 +48,9 @@ export function roleScene(o: RoleSceneOpts): Scene {
     focus: home(o.slot),
     phase: o.withBall ? ipPhase(o.roleIP, o.slot) : 'oop',
     oppAttack: !o.withBall && !isGK,
-    ballToFocus: o.withBall && r.tags.some((t) => t === 'CR' || t === 'LINK' || t === 'DROP'),
+    ballToFocus: o.withBall && (r.tags.some((t) => t === 'CR' || t === 'LINK' || t === 'DROP') || ['AM_LR', 'M_LR'].includes(groupOf(o.slot))),
+    beats: o.withBall ? forwardBeats(o.formation, o.slot, r.tags, r.groups) : undefined,
+    focusStart: o.withBall && forwardBeats(o.formation, o.slot, r.tags, r.groups) && r.tags.includes('RUN') ? { x: 80, y: (FORMATIONS[o.formation].find((s) => s.code === o.slot)?.x ?? 50) * 0.68 } : undefined,
     attrs: o.attrs ? { [home(o.slot)]: o.attrs } : undefined,
     duration: 14,
   });
@@ -87,7 +97,8 @@ export function boardScene(o: BoardOpts): Scene {
     pis: Object.fromEntries(Object.entries(o.pis).map(([code, keys]) => [home(code), keys])),
     focus: home(o.focus),
     phase: o.attack ? 'build' : 'oop',
-    duration: 18,
+    beats: o.attack ? attackPlay(o.formationIP) : undefined,
+    duration: 22,
   });
 }
 

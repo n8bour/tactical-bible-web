@@ -61,7 +61,7 @@ export function giveBall(w: WorldState, a: AgentState) {
 export type KickKind = 'ground' | 'air' | 'shot';
 
 /** Release the ball from its owner toward a world-frame target with the kicker's execution error. */
-export function kick(w: WorldState, a: AgentState, target: Vec, kind: KickKind, opts: { intended?: string; pressure: number; cross?: boolean; header?: boolean; flight?: number }) {
+export function kick(w: WorldState, a: AgentState, target: Vec, kind: KickKind, opts: { intended?: string; pressure: number; cross?: boolean; header?: boolean; flight?: number; endSpeed?: number }) {
   const b = w.ball;
   const at = a.spec.attrs;
   const from = { ...a.pos };
@@ -85,7 +85,7 @@ export function kick(w: WorldState, a: AgentState, target: Vec, kind: KickKind, 
   b.shotOutcome = null;
   b.pos = { ...from };
   if (kind === 'ground') {
-    const v0 = launchSpeed(d, 7 + 0.1 * d) * sErr;
+    const v0 = launchSpeed(d, opts.endSpeed ?? 7 + 0.1 * d) * sErr;
     b.vel = { x: Math.cos(ang) * v0, y: Math.sin(ang) * v0 };
     b.z = 0;
     b.vz = 0;
@@ -236,7 +236,7 @@ export function updateBall(w: WorldState, dt: number) {
     return;
   }
 
-  if (b.kind === 'air' && b.vz < 0 && b.z < 2.9 && b.z > 1.6) aerialContest(w);
+  if (b.kind === 'air' && b.vz < 0 && b.z < 3.4 && b.z > 1.2) aerialContest(w);
   if (b.owner || b.z >= 1.9) return;
 
   let best: AgentState | undefined;
@@ -257,7 +257,9 @@ export function updateBall(w: WorldState, dt: number) {
 
 function aerialContest(w: WorldState) {
   const b = w.ball;
-  const near = w.agents.filter((a) => dist(a.pos, b.pos) < (a.spec.slot === 'GK' ? attr('gkReach', a.spec.attrs) * 0.6 : 1.4));
+  // Players jump for where the ball is going to come down, not where it is a few metres earlier.
+  const spot = b.target && dist(b.pos, b.target) < 8 ? b.target : b.pos;
+  const near = w.agents.filter((a) => dist(a.pos, spot) < (a.spec.slot === 'GK' ? attr('gkReach', a.spec.attrs) * 0.6 : 1.8));
   if (!near.length) return;
   const teams = new Set(near.map((a) => a.spec.team));
   const passerTeam = b.lastTeam ?? 0;
