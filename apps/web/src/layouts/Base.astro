@@ -31,6 +31,7 @@ const nav = [
   </head>
   <body>
     <header class="site-header">
+      <a class="skip-link visually-hidden" href="#main-content">Skip to main content</a>
       <a class="brand" href={`${base}/`}>FM27 Tactical Bible</a>
       <nav aria-label="Sections">
         {nav.map(([href, label]) => (
@@ -38,7 +39,7 @@ const nav = [
         ))}
       </nav>
     </header>
-    <main>
+    <main id="main-content" tabindex="-1">
       <slot />
     </main>
     <footer class="disclaimer">

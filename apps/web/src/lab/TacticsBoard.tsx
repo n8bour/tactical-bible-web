@@ -166,7 +166,7 @@ export default function TacticsBoard({ base = '' }: { base?: string }) {
                         set({ tis });
                       }}
                     />
-                    <p>{t.desc} <a href={`${base}/instructions/team/${t.key}`}>More</a></p>
+                    <p>{t.desc} <a href={`${base}/instructions/team/${t.key}`}>More <span className="visually-hidden">about {t.name}</span></a></p>
                   </div>
                 );
               })}

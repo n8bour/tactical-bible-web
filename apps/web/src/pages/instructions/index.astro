@@ -11,7 +11,7 @@ const player = (await getCollection('player-instructions')).map((e) => e.data);
   {(['IP', 'OOP'] as const).map((ph) => (
     <section>
       <h2>Team instructions: {PHASE_NAME[ph].toLowerCase()}</h2>
-      <ul class="cards">
+      <ul class="cards" role="list">
         {team.filter((t) => t.phase === ph).map((t) => (
           <li><a class="card" href={href(`/instructions/team/${t.key}`)}><h3>{t.name}</h3><p>{t.summary}</p></a></li>
         ))}
@@ -19,7 +19,7 @@ const player = (await getCollection('player-instructions')).map((e) => e.data);
     </section>
   ))}
   <h2>Player instructions</h2>
-  <ul class="cards">
+  <ul class="cards" role="list">
     {player.map((p) => (
       <li><a class="card" href={href(`/instructions/player/${p.key}`)}><h3>{p.name}</h3><p>{p.summary}</p></a></li>
     ))}

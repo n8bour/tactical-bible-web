@@ -11,7 +11,7 @@ const attrs = (await getCollection('attributes')).map((e) => e.data);
   {(['T', 'M', 'F', 'G'] as const).map((cat) => (
     <section>
       <h2>{CAT_NAME[cat]}</h2>
-      <ul class="cards">
+      <ul class="cards" role="list">
         {attrs.filter((a) => a.cat === cat).map((a) => (
           <li><a class="card" href={href(`/attributes/${a.key}`)}><h3>{a.name}</h3><p>{a.summary}</p></a></li>
         ))}

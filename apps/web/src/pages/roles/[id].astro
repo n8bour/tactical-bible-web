@@ -27,7 +27,7 @@ const profile = ROLE_PROFILES[r.id];
   <p class="lead">{r.summary} <span class="tip-inline">{r.tip}</span></p>
   <RoleExplorer client:visible roleId={r.id} base={BASE} />
   <h2>Key attributes</h2>
-  <ul class="attr-list">
+  <ul class="attr-list" role="list">
     {r.keyAttrs.map((k) => <li><a data-key-attr href={href(`/attributes/${k}`)}>{ATTR_NAME[k]}</a></li>)}
     {r.prefAttrs.map((k) => <li><a href={href(`/attributes/${k}`)}>{ATTR_NAME[k]}</a></li>)}
   </ul>

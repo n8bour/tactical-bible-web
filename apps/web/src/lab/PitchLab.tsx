@@ -7,7 +7,7 @@ import { Checkbox, CheckboxIndicator } from '@ui-sdk/react/checkbox';
 import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from '@ui-sdk/react/collapsible';
 import { SegmentedControl, SegmentedControlIndicator, SegmentedControlItem } from '@ui-sdk/react/segmented-control';
 import { Tabs, TabsList, TabsPanel, TabsTab } from '@ui-sdk/react/tabs';
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { AttrSlider, roleLabel, SelectField, SwitchRow } from './Controls';
 import { OVERLAYS, type OverlayKey } from './PitchRenderer';
 import { useLab } from './useLab';
@@ -62,6 +62,7 @@ function MetricsStrip({ live, base }: { live: Metrics; base: Metrics | null }) {
 }
 
 export function WhyPanel({ world, focus, base }: { world: WorldState; focus: string; base: string }) {
+  const headingId = useId();
   const a = world.agents.find((x) => x.spec.id === focus);
   const tr = a?.trace[a.trace.length - 1];
   if (!a || !tr) return <p className="why">No decision yet for this player.</p>;
@@ -72,23 +73,26 @@ export function WhyPanel({ world, focus, base }: { world: WorldState; focus: str
   };
   return (
     <div className="why">
-      <h3>Why: latest decision at {tr.t.toFixed(1)} s</h3>
-      <table>
-        <thead>
-          <tr><th>Option</th><th>Utility</th><th>Top terms</th></tr>
-        </thead>
-        <tbody>
-          {ranked.map(({ o, i }) => (
-            <tr key={`${i}-${o.kind}-${o.to ?? ''}`} data-chosen={i === tr.chosen ? '' : undefined}>
-              <td>{i === tr.chosen ? '▶ ' : ''}{label(o)}</td>
-              <td>{o.utility.toFixed(2)}</td>
-              <td>
-                {Object.entries(o.terms).sort((p, q) => Math.abs(q[1]) - Math.abs(p[1])).slice(0, 3).map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v.toFixed(2)}`).join(', ')}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <h3 id={headingId}>Why: latest decision at {tr.t.toFixed(1)} s</h3>
+      <div className="table-wrapper" tabIndex={0} role="region" aria-labelledby={headingId}>
+        <table>
+          <caption className="visually-hidden">Ranked decision options and utility terms</caption>
+          <thead>
+            <tr><th scope="col">Option</th><th scope="col">Utility</th><th scope="col">Top terms</th></tr>
+          </thead>
+          <tbody>
+            {ranked.map(({ o, i }) => (
+              <tr key={`${i}-${o.kind}-${o.to ?? ''}`} data-chosen={i === tr.chosen ? '' : undefined}>
+                <th scope="row">{i === tr.chosen ? '▶ ' : ''}{label(o)}</th>
+                <td>{o.utility.toFixed(2)}</td>
+                <td>
+                  {Object.entries(o.terms).sort((p, q) => Math.abs(q[1]) - Math.abs(p[1])).slice(0, 3).map(([k, v]) => `${k} ${v >= 0 ? '+' : ''}${v.toFixed(2)}`).join(', ')}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <p>
         Attributes behind this choice:{' '}
         {tr.attrsUsed.map((k, i) => (

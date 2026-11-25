@@ -7,9 +7,9 @@ const concepts = (await getCollection('concepts')).map((e) => e.data);
 ---
 <Base title="Concepts">
   <h1>Concepts</h1>
-  <ul class="cards">
+  <ul class="cards" role="list">
     {concepts.map((c) => (
-      <li><a class="card" href={href(`/concepts/${c.key}`)}><h3>{c.name}</h3><p>{c.summary}</p></a></li>
+      <li><a class="card" href={href(`/concepts/${c.key}`)}><h2>{c.name}</h2><p>{c.summary}</p></a></li>
     ))}
   </ul>
 </Base>

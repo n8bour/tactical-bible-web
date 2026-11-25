@@ -117,7 +117,7 @@ function RunsView({ d }: { d: RunsDiagram }) {
 }
 
 function OptionPanel({ d, options, heading, withDelta }: { d: DecisionDiagram; options: DecisionOption[]; heading: string; withDelta: boolean }) {
-  const ordered = [...options].sort((a, b) => b.rank - a.rank); // best option drawn last, on top
+  const ordered = options.toSorted((a, b) => b.rank - a.rank); // best option drawn last, on top
   return (
     <div>
       <h3>{heading}</h3>
@@ -139,7 +139,7 @@ function OptionPanel({ d, options, heading, withDelta }: { d: DecisionDiagram; o
           );
         })}
       </Pitch>
-      <ol className="instr-options">
+      <ol className="instr-options" role="list">
         {options.map((o) => (
           <li key={o.rank} style={{ '--dot': rankColor(o.rank) } as CSSProperties}>
             <span className="instr-rank">#{o.rank}</span> {o.label} <span className="instr-util">{o.utility.toFixed(2)}</span>
