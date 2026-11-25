@@ -1,15 +1,21 @@
 import { expect, test } from '@playwright/test';
 
-test('Stay Wider widens the focus winger against the baseline', async ({ page }) => {
-  await page.goto('/instructions/player/stay_wider');
-  const lab = page.getByTestId('pitch-lab');
-  await expect(lab.locator('canvas')).toBeVisible();
+test('tactics board: Much Wider spreads the team against the default team', async ({ page }) => {
+  await page.goto('/tactics?tab=ip&ti=width:4');
+  const board = page.getByTestId('tactics-board');
+  await expect(board.locator('canvas')).toBeVisible();
+  const width = board.locator('.metrics div', { hasText: 'Team avg width' }).locator('dd');
+  await expect(width).toHaveAttribute('data-sign', 'pos', { timeout: 15_000 });
+});
 
-  await lab.getByRole('tab', { name: 'View' }).click();
-  await lab.getByRole('switch', { name: 'Compare with baseline' }).click();
-  await lab.getByRole('tab', { name: 'Player' }).click();
-  await lab.getByRole('switch', { name: 'Stay wider' }).click();
-
-  await expect(lab.locator('[data-metric="avgWidth"]')).toHaveAttribute('data-sign', 'pos', { timeout: 15_000 });
-  await expect(lab.locator('[data-metric="avgWidth"]')).toHaveText(/^\+/);
+test('role explorer: lowering Vision lists what the player stops seeing', async ({ page }) => {
+  await page.goto('/roles/iw_ip');
+  const explorer = page.getByTestId('role-explorer');
+  await expect(explorer.locator('canvas')).toBeVisible();
+  const vision = explorer.locator('input[aria-label="Vision"]');
+  await vision.focus();
+  for (let i = 0; i < 8; i++) await page.keyboard.press('ArrowLeft');
+  const diff = explorer.locator('.diff');
+  await expect(diff).toContainText('Sees through balls');
+  await expect(diff).toContainText('Pass range considered');
 });

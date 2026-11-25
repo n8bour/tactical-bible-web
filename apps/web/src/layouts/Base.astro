@@ -10,11 +10,12 @@ const { title, description = 'Interactive FM27 guide to roles, instructions and 
 const path = Astro.url.pathname;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const nav = [
+  ['/tactics', 'Tactics board'],
   ['/roles', 'Roles'],
   ['/instructions', 'Instructions'],
   ['/concepts', 'Concepts'],
   ['/attributes', 'Attributes'],
-  ['/lab', 'Lab'],
+  ['/lab', 'Sandbox'],
 ];
 ---
 <!doctype html>

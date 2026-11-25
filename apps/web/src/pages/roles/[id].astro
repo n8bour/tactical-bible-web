@@ -3,7 +3,7 @@ import { getCollection, render } from 'astro:content';
 import { ROLE_PROFILES } from '@tb/content';
 import Base from '../../layouts/Base.astro';
 import AttrModel from '../../components/AttrModel.astro';
-import PitchLab from '../../lab/PitchLab';
+import RoleExplorer from '../../lab/RoleExplorer';
 import { ATTR_NAME, BASE, GROUP_NAME, href, PHASE_NAME } from '../../lib/site';
 
 export async function getStaticPaths() {
@@ -24,14 +24,13 @@ const profile = ROLE_PROFILES[r.id];
     <span class="badge" data-src={profile.attrSrc}>Attributes {profile.attrSrc.toUpperCase()}</span>
     <span class="badge" data-src={profile.src}>Behaviour {profile.src.toUpperCase()}</span>
   </p>
-  <p class="lead">{r.summary}</p>
-  <p class="tip">{r.tip}</p>
+  <p class="lead">{r.summary} <span class="tip-inline">{r.tip}</span></p>
+  <RoleExplorer client:visible roleId={r.id} base={BASE} />
   <h2>Key attributes</h2>
   <ul class="attr-list">
     {r.keyAttrs.map((k) => <li><a data-key-attr href={href(`/attributes/${k}`)}>{ATTR_NAME[k]}</a></li>)}
     {r.prefAttrs.map((k) => <li><a href={href(`/attributes/${k}`)}>{ATTR_NAME[k]}</a></li>)}
   </ul>
-  {r.scenes.map((id) => <PitchLab client:visible sceneId={id} base={BASE} />)}
   <div class="prose">
     <Content />
     <h2>How the simulation reads these attributes</h2>

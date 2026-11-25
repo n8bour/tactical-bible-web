@@ -46,9 +46,9 @@ function attrHint(key: AttrKey): string {
   return 'Simulation: ' + rules.map(([k, r]) => `${k} = ${r.formula}`).join('; ');
 }
 
-export function AttrSlider(props: { attr: AttrKey; name: string; value: number; isKey: boolean; onChange: (v: number) => void }) {
+export function AttrSlider(props: { attr: AttrKey; name: string; value: number; isKey: boolean; changed?: boolean; onChange: (v: number) => void }) {
   return (
-    <div className="slider-row">
+    <div className="slider-row" data-changed={props.changed ? '' : undefined}>
       <Tooltip>
         <TooltipTrigger render={<span tabIndex={0} />}>{props.isKey ? <strong>{props.name}</strong> : props.name}</TooltipTrigger>
         <TooltipContent>{attrHint(props.attr)}</TooltipContent>

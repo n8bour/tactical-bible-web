@@ -61,7 +61,7 @@ function MetricsStrip({ live, base }: { live: Metrics; base: Metrics | null }) {
   );
 }
 
-function WhyPanel({ world, focus, base }: { world: WorldState; focus: string; base: string }) {
+export function WhyPanel({ world, focus, base }: { world: WorldState; focus: string; base: string }) {
   const a = world.agents.find((x) => x.spec.id === focus);
   const tr = a?.trace[a.trace.length - 1];
   if (!a || !tr) return <p className="why">No decision yet for this player.</p>;

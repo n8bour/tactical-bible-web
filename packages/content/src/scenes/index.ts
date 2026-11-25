@@ -1,32 +1,93 @@
-import type { Phase, PIKey } from '@tb/sim';
+import type { AttrKey, Phase, PIKey } from '@tb/sim';
 import anchors from '../../data/role-anchors.json';
 import concepts from '../../data/concepts.json';
 import pis from '../../data/player-instructions.json';
 import tis from '../../data/team-instructions.json';
-import { ROLES } from '../roles/valid';
+import { DEFAULT_ROLE, groupOf, ROLE_BY_ID, ROLES } from '../roles/valid';
 import { buildScene, home, type Scene, type SceneOpts } from './builder';
 
 const F433 = '4-3-3 DM Wide';
 const F4231 = '4-2-3-1 Wide';
 
-function roleScene(r: (typeof ROLES)[number]): Scene {
-  const a = (anchors as Record<string, { formation: string; slot: string }>)[r.id];
-  const g = r.groups[0];
-  const phase: Phase = r.phase === 'OOP'
-    ? 'oop'
-    : r.movePhase === 'build' || r.movePhase === 'prog' || r.movePhase === 'final'
-      ? r.movePhase
-      : ['GK', 'DC', 'D_LR'].includes(g) ? 'build' : ['ST', 'AM_LR', 'AMC'].includes(g) ? 'final' : 'prog';
+export const ROLE_HOME = anchors as Record<string, { formation: string; slot: string }>;
+
+/** Phase where an IP role's typical movement shows best. */
+function ipPhase(roleId: string, slot: string): Phase {
+  const r = ROLE_BY_ID[roleId];
+  if (r.movePhase === 'build' || r.movePhase === 'prog' || r.movePhase === 'final') return r.movePhase;
+  const g = groupOf(slot);
+  return ['GK', 'DC', 'D_LR'].includes(g) ? 'build' : ['ST', 'AM_LR', 'AMC'].includes(g) ? 'final' : 'prog';
+}
+
+export interface RoleSceneOpts {
+  formation: string;
+  slot: string;
+  roleIP: string;
+  roleOOP: string;
+  withBall: boolean;
+  attrs?: Partial<Record<AttrKey, number>>;
+}
+
+/** One player in one position: his team attacking (with the ball) or the opponent attacking his zone (without it). */
+export function roleScene(o: RoleSceneOpts): Scene {
+  const r = ROLE_BY_ID[o.roleIP];
+  const isGK = o.slot === 'GK';
   return buildScene({
-    id: `role-${r.id}`,
-    title: r.name,
+    id: `role-${o.withBall ? o.roleIP : o.roleOOP}`,
+    title: ROLE_BY_ID[o.withBall ? o.roleIP : o.roleOOP].name,
+    formation: o.formation,
+    roles: { [o.slot]: [o.roleIP, o.roleOOP] },
+    focus: home(o.slot),
+    phase: o.withBall ? ipPhase(o.roleIP, o.slot) : 'oop',
+    oppAttack: !o.withBall && !isGK,
+    ballToFocus: o.withBall && r.tags.some((t) => t === 'CR' || t === 'LINK' || t === 'DROP'),
+    attrs: o.attrs ? { [home(o.slot)]: o.attrs } : undefined,
+    duration: 14,
+  });
+}
+
+const defaultFor = (slot: string, phase: 'IP' | 'OOP') => (phase === 'IP' ? DEFAULT_ROLE.IP : DEFAULT_ROLE.OOP)[groupOf(slot)];
+
+function defaultRoleScene(r: (typeof ROLES)[number]): Scene {
+  const a = ROLE_HOME[r.id];
+  const s = roleScene({
     formation: a.formation,
-    roles: { [a.slot]: r.phase === 'IP' ? [r.id] : [undefined, r.id] },
-    focus: home(a.slot),
-    phase,
-    oppAttack: r.phase === 'OOP' && g !== 'GK',
-    ballToFocus: r.phase === 'IP' && r.tags.some((t) => t === 'CR' || t === 'LINK' || t === 'DROP'),
-    lesson: { text: r.moveNote ? `Watch the ${r.ab}: ${r.moveNote}.` : r.desc },
+    slot: a.slot,
+    roleIP: r.phase === 'IP' ? r.id : defaultFor(a.slot, 'IP'),
+    roleOOP: r.phase === 'OOP' ? r.id : defaultFor(a.slot, 'OOP'),
+    withBall: r.phase === 'IP',
+  });
+  return { ...s, duration: 12, lesson: { text: r.moveNote ? `Watch the ${r.ab}: ${r.moveNote}.` : r.desc } };
+}
+
+export interface BoardOpts {
+  formationIP: string;
+  formationOOP: string;
+  awayFormation: string;
+  mentality: number;
+  tis: Record<string, number>;
+  roles: Record<string, [string?, string?]>;
+  pis: Partial<Record<string, PIKey[]>>;
+  /** true: your team builds from the keeper and attacks; false: the opponent builds and you defend */
+  attack: boolean;
+  focus: string;
+}
+
+/** Tactics board scene: a full move from the keeper, long enough to reach the final third. */
+export function boardScene(o: BoardOpts): Scene {
+  return buildScene({
+    id: `board-${o.attack ? 'ip' : 'oop'}`,
+    title: o.attack ? 'In possession' : 'Out of possession',
+    formation: o.formationIP,
+    formationOOP: o.formationOOP,
+    awayFormation: o.awayFormation,
+    mentality: o.mentality,
+    tis: o.tis,
+    roles: o.roles,
+    pis: Object.fromEntries(Object.entries(o.pis).map(([code, keys]) => [home(code), keys])),
+    focus: home(o.focus),
+    phase: o.attack ? 'build' : 'oop',
+    duration: 18,
   });
 }
 
@@ -110,7 +171,7 @@ function conceptScene(c: (typeof concepts)[number]): Scene | null {
 
 export const SCENES: Record<string, Scene> = Object.fromEntries(
   [
-    ...ROLES.map(roleScene),
+    ...ROLES.map(defaultRoleScene),
     ...tis.map(tiScene),
     ...pis.map(piScene),
     ...concepts.filter((c) => c.scene).map(conceptScene),

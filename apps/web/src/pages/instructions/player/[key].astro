@@ -2,9 +2,10 @@
 import { getCollection, render } from 'astro:content';
 import { PI_EFFECTS } from '@tb/content';
 import type { PIKey } from '@tb/sim';
+import InstructionDiagram from '../../../components/InstructionDiagram';
 import Base from '../../../layouts/Base.astro';
-import PitchLab from '../../../lab/PitchLab';
-import { BASE, href } from '../../../lib/site';
+import { playerDiagram } from '../../../lib/diagrams';
+import { href } from '../../../lib/site';
 
 export async function getStaticPaths() {
   const entries = await getCollection('player-instructions');
@@ -14,6 +15,7 @@ const { entry } = Astro.props;
 const p = entry.data;
 const { Content } = await render(entry);
 const effect = PI_EFFECTS[p.key as PIKey];
+const view = playerDiagram(p.key as PIKey);
 ---
 <Base title={p.name} description={p.summary}>
   <p><a href={href('/instructions')}>← Instructions</a></p>
@@ -23,7 +25,7 @@ const effect = PI_EFFECTS[p.key as PIKey];
     {p.fm27 && <span class="badge" data-phase>New in FM27</span>}
   </p>
   <p class="lead">{p.summary}</p>
-  {p.scenes.map((id) => <PitchLab client:visible sceneId={id} base={BASE} />)}
+  <InstructionDiagram view={view} note={effect.note} src={effect.src} board={href(view.board)} />
   <div class="prose">
     <Content />
     <h2>How the simulation applies it</h2>

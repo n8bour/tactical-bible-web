@@ -15,11 +15,13 @@ export interface FrameInput {
   prev: Vec[];
   prevBall: Vec;
   alpha: number;
-  ghost?: { world: WorldState; prev: Vec[] };
+  ghost?: { world: WorldState; prev: Vec[]; trail?: Vec[] };
   focus: string;
   overlays: Record<OverlayKey, boolean>;
   trail: Vec[];
   roleAb: (a: AgentState) => string;
+  /** draw press radii and runs for the selected player only */
+  focusOnly?: boolean;
 }
 
 const mix = (a: Vec, b: Vec, t: number): Vec => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
@@ -147,7 +149,7 @@ export class PitchRenderer {
 
     if (f.overlays.pressure) {
       for (const a of w.agents) {
-        if (w.possession === a.spec.team || a.spec.slot === 'GK') continue;
+        if (w.possession === a.spec.team || a.spec.slot === 'GK' || (f.focusOnly && a.spec.id !== f.focus)) continue;
         const m = resolveMods(w.teams[a.spec.team].mods, a.spec, w.phase[a.spec.team], w.know);
         const r = m.profile.oop.pressRadius * attr('pressWill', a.spec.attrs) * m.pressMult;
         const p = this.px(pos[w.agents.indexOf(a)]);
@@ -165,7 +167,7 @@ export class PitchRenderer {
 
     if (f.overlays.runs) {
       for (const a of w.agents) {
-        if (a.intent.kind !== 'run') continue;
+        if (a.intent.kind !== 'run' || (f.focusOnly && a.spec.id !== f.focus)) continue;
         const from = this.px(pos[w.agents.indexOf(a)]), to = this.px(a.intent.target);
         this.dashed(o, from, to, { width: 2, color: FOCUS, alpha: 0.85 });
         this.arrowHead(o, from, to, FOCUS);
@@ -211,9 +213,17 @@ export class PitchRenderer {
     gh.clear();
     if (f.ghost) {
       const gw = f.ghost.world;
+      const gt = f.ghost.trail ?? [];
+      if (gt.length > 1) {
+        const pts = gt.map((p) => this.px(p));
+        gh.moveTo(pts[0].x, pts[0].y);
+        for (const p of pts.slice(1)) gh.lineTo(p.x, p.y);
+        gh.stroke({ width: 2, color: 0xffffff, alpha: 0.45 });
+      }
       gw.agents.forEach((a, i) => {
         const p = this.px(mix(f.ghost!.prev[i] ?? a.pos, a.pos, f.alpha));
-        gh.circle(p.x, p.y, 1.1 * s).fill({ color: a.spec.id === f.focus ? FOCUS : TEAM[a.spec.team], alpha: 0.35 });
+        if (a.spec.id === f.focus) gh.circle(p.x, p.y, 1.15 * s).fill({ color: 0xffffff, alpha: 0.35 }).stroke({ width: 2, color: FOCUS, alpha: 0.8 });
+        else gh.circle(p.x, p.y, 1.1 * s).fill({ color: TEAM[a.spec.team], alpha: 0.14 });
       });
       const gb = this.px(gw.ball.pos);
       gh.circle(gb.x, gb.y, 0.45 * s).fill({ color: 0xffffff, alpha: 0.35 });

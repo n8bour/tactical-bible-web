@@ -5,6 +5,17 @@ import { OVERLAYS, PitchRenderer, type OverlayKey } from './PitchRenderer';
 
 const TRAIL_TICKS = 6 / DT;
 
+export interface LabOptions {
+  /** Fixed comparison world (ghosts). When given, compare mode is always on and uses this scene. */
+  baseline?: Scene | null;
+  /** Restart from the beginning when the scene ends instead of pausing. */
+  loop?: boolean;
+  /** With `loop`, restart early once this holds (e.g. the lesson's team lost the ball). */
+  restartWhen?: (w: WorldState) => boolean;
+  overlays?: Partial<Record<OverlayKey, boolean>>;
+  focusOnly?: boolean;
+}
+
 export interface LabApi {
   world: React.RefObject<WorldState | null>;
   baseline: React.RefObject<WorldState | null>;
@@ -21,30 +32,34 @@ export interface LabApi {
   setCompare: (on: boolean) => void;
   restart: () => void;
   stepOnce: () => void;
-  /** re-render the panels after an edit */
   touch: () => void;
   version: number;
 }
 
-/** Owns the live world (and the baseline world in compare mode) and the fixed-step render loop. */
-export function useLab(scene: Scene, rebuildKey: string): LabApi {
+/** Owns the live world (and a ghost comparison world) and the fixed-step render loop. */
+export function useLab(scene: Scene, rebuildKey: string, opts: LabOptions = {}): LabApi {
   const world = useRef<WorldState | null>(null);
   const baseline = useRef<WorldState | null>(null);
   const host = useRef<HTMLDivElement | null>(null);
   const renderer = useRef<PitchRenderer | null>(null);
   const prev = useRef<{ live: Vec[]; base: Vec[]; ball: Vec }>({ live: [], base: [], ball: { x: 0, y: 0 } });
   const trail = useRef<Vec[]>([]);
+  const ghostTrail = useRef<Vec[]>([]);
   const acc = useRef(0);
   const visible = useRef(true);
   const reduced = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
   const [playing, setPlaying] = useState(!reduced);
   const [speed, setSpeed] = useState(1);
   const [focus, setFocus] = useState(scene.focus);
-  const [compare, setCompareState] = useState(false);
-  const [overlays, setOverlays] = useState<Record<OverlayKey, boolean>>(() => Object.fromEntries(OVERLAYS.map((k) => [k, k === 'vision' || k === 'runs'])) as Record<OverlayKey, boolean>);
+  const [compareToggle, setCompareState] = useState(false);
+  const [overlays, setOverlays] = useState<Record<OverlayKey, boolean>>(
+    () => Object.fromEntries(OVERLAYS.map((k) => [k, opts.overlays?.[k] ?? (k === 'vision' || k === 'runs')])) as Record<OverlayKey, boolean>,
+  );
   const [version, setVersion] = useState(0);
-  const state = useRef({ playing, speed, focus, compare, overlays });
-  state.current = { playing, speed, focus, compare, overlays };
+  const fixedBaseline = opts.baseline !== undefined;
+  const compare = fixedBaseline ? opts.baseline !== null : compareToggle;
+  const state = useRef({ playing, speed, focus, compare, overlays, loop: !!opts.loop, baselineScene: opts.baseline ?? null, restartWhen: opts.restartWhen });
+  state.current = { playing, speed, focus, compare, overlays, loop: !!opts.loop, baselineScene: opts.baseline ?? null, restartWhen: opts.restartWhen };
 
   const snapPrev = () => {
     const w = world.current!;
@@ -53,13 +68,17 @@ export function useLab(scene: Scene, rebuildKey: string): LabApi {
 
   const build = useCallback((withCompare: boolean, from?: WorldState | null) => {
     world.current = createWorld(from ? { ...from.scene } : scene, KNOWLEDGE);
-    baseline.current = withCompare ? createWorld(scene, KNOWLEDGE) : null;
+    const ghostScene = state.current.baselineScene ?? scene;
+    baseline.current = withCompare ? createWorld(ghostScene, KNOWLEDGE) : null;
     trail.current = [];
+    ghostTrail.current = [];
     acc.current = 0;
     snapPrev();
     setVersion((v) => v + 1);
     if (!reduced) setPlaying(true);
   }, [scene]);
+  const buildRef = useRef(build);
+  buildRef.current = build;
 
   useEffect(() => {
     build(state.current.compare);
@@ -71,11 +90,15 @@ export function useLab(scene: Scene, rebuildKey: string): LabApi {
     snapPrev();
     step(w);
     if (baseline.current) step(baseline.current);
-    const f = w.agents.find((a) => a.spec.id === state.current.focus);
-    if (f) {
-      trail.current.push({ ...f.pos });
-      if (trail.current.length > TRAIL_TICKS) trail.current.shift();
-    }
+    const id = state.current.focus;
+    const push = (list: Vec[], ws: WorldState | null) => {
+      const f = ws?.agents.find((a) => a.spec.id === id);
+      if (!f) return;
+      list.push({ ...f.pos });
+      if (list.length > TRAIL_TICKS) list.shift();
+    };
+    push(trail.current, w);
+    push(ghostTrail.current, baseline.current);
   };
 
   const draw = () => {
@@ -88,10 +111,11 @@ export function useLab(scene: Scene, rebuildKey: string): LabApi {
       prev: prev.current.live,
       prevBall: prev.current.ball,
       alpha: Math.min(1, acc.current / DT),
-      ghost: baseline.current ? { world: baseline.current, prev: prev.current.base } : undefined,
+      ghost: baseline.current ? { world: baseline.current, prev: prev.current.base, trail: ghostTrail.current } : undefined,
       focus: s.focus,
       overlays: s.overlays,
       trail: trail.current,
+      focusOnly: opts.focusOnly,
       roleAb: (a) => {
         const ph = w.phase[a.spec.team];
         const id = ph === 'oop' || ph === 'loss' ? a.spec.roleOOP : a.spec.roleIP;
@@ -128,9 +152,12 @@ export function useLab(scene: Scene, rebuildKey: string): LabApi {
           advance();
           acc.current -= DT;
         }
-        if (w.t >= w.scene.duration) {
-          acc.current = 0;
-          setPlaying(false);
+        if (w.t >= w.scene.duration || (s.loop && s.restartWhen?.(w))) {
+          if (s.loop) buildRef.current(s.compare, w);
+          else {
+            acc.current = 0;
+            setPlaying(false);
+          }
         }
         if (now - lastUi > 150) {
           lastUi = now;
@@ -165,6 +192,7 @@ export function useLab(scene: Scene, rebuildKey: string): LabApi {
     focus,
     setFocus: (id) => {
       trail.current = [];
+      ghostTrail.current = [];
       setFocus(id);
     },
     overlays,

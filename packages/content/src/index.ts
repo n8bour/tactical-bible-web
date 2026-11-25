@@ -11,5 +11,6 @@ export { KNOWLEDGE, FORMATIONS, OPP_FORMATION } from './knowledge';
 export { ROLE_PROFILES, OVERRIDES, type ContentProfile } from './roles/profiles';
 export { ROLES, ROLE_BY_ID, DEFAULT_ROLE, groupOf, isWideCB, roleFits, rolesFor, type Group, type RoleData } from './roles/valid';
 export { TI_EFFECTS, PI_EFFECTS, TI_DEFAULTS, type TIKey } from './instructions/effects';
-export { SCENES, buildScene, type Scene, type SceneOpts } from './scenes';
+export { SCENES, buildScene, roleScene, boardScene, ROLE_HOME, type Scene, type SceneOpts, type RoleSceneOpts, type BoardOpts } from './scenes';
+export { pairSlots } from './scenes/builder';
 export type { SceneLesson } from './scenes/builder';

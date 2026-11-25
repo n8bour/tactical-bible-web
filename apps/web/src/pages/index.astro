@@ -4,11 +4,12 @@ import { href } from '../lib/site';
 import { ROLES, teamInstructions, playerInstructions, concepts, attributes } from '@tb/content';
 
 const sections = [
-  { path: '/roles', title: 'Roles', text: `All ${ROLES.length} in- and out-of-possession roles, each with a live scene.` },
-  { path: '/instructions', title: 'Instructions', text: `${teamInstructions.length} team and ${playerInstructions.length} player instructions, and what they change on the pitch.` },
-  { path: '/concepts', title: 'Concepts', text: `${concepts.length} principles: rest-defence, width, box occupation, pressing coherence and more.` },
+  { path: '/tactics', title: 'Tactics board', text: 'Pick your shapes, the opponent and every team instruction; watch your team attack and defend.' },
+  { path: '/roles', title: 'Roles', text: `All ${ROLES.length} roles. Pick a position and role, then see him with and without the ball and how his attributes change it.` },
+  { path: '/instructions', title: 'Instructions', text: `${teamInstructions.length} team and ${playerInstructions.length} player instructions, each with a before/after diagram.` },
+  { path: '/concepts', title: 'Concepts', text: `${concepts.length} principles explained on the pitch: width, rest-defence, box occupation, pressing coherence and more.` },
   { path: '/attributes', title: 'Attributes', text: `How each of the ${attributes.length} attributes drives behaviour in the simulation.` },
-  { path: '/lab', title: 'Lab', text: 'A free sandbox: pick formations, roles and instructions for both teams and watch it play.' },
+  { path: '/lab', title: 'Sandbox', text: 'Free play: change anything on any player of either team while the match runs.' },
 ];
 ---
 <Base title="FM27 Tactical Bible">
