@@ -14,16 +14,15 @@ Every role and instruction page embeds a live 2D pitch: change a player's attrib
 | `packages/content` | The knowledge base (`data/*.json`), role profiles (`src/roles/profiles.ts` = generated drafts + hand `OVERRIDES`), instruction effects (`src/instructions/effects.ts`) and the 136 lesson scenes (`src/scenes/`). |
 | `apps/web` | Astro 5 static site with React 19 islands, PixiJS v8 renderer and ui-sdk controls. MDX content lives in `src/content/`. |
 
-### The lab
+### Pages
 
-- **Scenes** set up a situation with 1–2 scripted beats (set-up passes only the intended receiver can collect), then the agents play freely. Opponents use a 4-2-3-1 and default attributes are 12, with the focus player's key attributes at 15.
-- **Controls** (ui-sdk): focus player, IP/OOP role, attribute sliders (role attributes plus an "All attributes" disclosure), player-instruction switches (exclusive pairs switch each other off), team instructions and mentality for either team, Play/Pause, Restart, Step and speed.
-- **Overlays**: vision cone, decision options coloured by utility, press radii, runs, team shape, defensive line/line of engagement/block width, and a 6 s trail.
-- **Compare with baseline** replays the scene's original setup with the same seed in lockstep. The baseline is drawn as ghosts, and the metrics strip shows the deltas.
-- **Why panel**: the focus player's latest decision with each option's utility and its top three terms, linked to the attributes behind it.
-- `/lab` is a free sandbox: pick formations for both teams, then any player's roles, attributes and instructions.
+- **Tactics board** (`/tactics`): choose your shapes with and without the ball, the opponent, mentality and every team instruction. "In possession" shows your team attacking, "Out of possession" shows the opponent attacking your block. Instruction pages deep-link into it (`?tab=ip|oop&ti=key:option`, `&pi=key&slot=CODE`).
+- **Role explorer** (every `/roles/<id>` page): pick formation and position, the role with and without the ball, then change attributes. The same move replays beside a faded default player and a "What changes" box lists the model numbers before/after and what he did differently.
+- **Instruction pages**: a static, build-time before/after diagram computed from the simulation, plus an "Open in tactics board" button.
+- **Concept pages**: explanatory pitch diagrams; interactive only where a control teaches something (width, pressing coherence, IP/OOP, rest-defence, box, outlets).
+- **Sandbox** (`/lab`): free play on either team.
 
-The attribute pages and the "How the simulation reads these attributes" section on role pages are generated from `ATTR_MODEL`, so the explanations can't drift from the model.
+Overlays: vision cone, decision options, press radii, runs, tactical positions, lines, trail. The "Why" panel shows the latest decision with its top terms. Attribute pages and role pages generate their model tables from `ATTR_MODEL`.
 
 ## Commands
 
