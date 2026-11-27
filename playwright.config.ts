@@ -3,11 +3,18 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: 'e2e',
   timeout: 60_000,
-  use: { baseURL: 'http://localhost:4322' },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  use: {
+    baseURL: 'http://localhost:4173',
+  },
+  projects: [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ],
   webServer: {
-    command: 'npm -w apps/web run preview -- --port 4322',
-    url: 'http://localhost:4322',
+    command: 'npm run preview -- --port 4173 --strictPort',
+    url: 'http://localhost:4173',
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

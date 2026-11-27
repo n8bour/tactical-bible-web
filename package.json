@@ -2,20 +2,31 @@
   "name": "tactical-bible-web",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "apps/*"],
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "build": "npm -w packages/sim run build && npm -w apps/web run build",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
     "test": "vitest run",
-    "e2e": "playwright test",
-    "typecheck": "tsc -p packages/sim && tsc -p packages/content && npm -w apps/web run check",
-    "seed:content": "node packages/content/scripts/seed-mdx.mjs",
-    "draft:profiles": "node packages/content/scripts/draft-profiles.mjs",
-    "tuning:report": "vitest run --config packages/content/scripts/vitest.tuning.config.ts"
+    "typecheck": "tsc --noEmit",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@ui-sdk/core": "0.1.0-beta.16",
+    "@ui-sdk/react": "0.1.0-beta.16",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.10",
+    "@types/react-dom": "^19.2.0",
+    "@vitejs/plugin-react": "^4.7.0",
     "typescript": "~5.9.3",
+    "vite": "^7.3.8",
     "vitest": "^3.2.7"
   }
 }

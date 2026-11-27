@@ -16,8 +16,25 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - name: No unfinished content on main
-        if: github.ref == 'refs/heads/main'
-        run: '! grep -r "TODO(content)" apps/web/src/content'
       - run: npx playwright install --with-deps chromium
       - run: npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        with:
+          name: dist
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=tactical-bible-web --branch=main

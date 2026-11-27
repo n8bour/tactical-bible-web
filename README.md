@@ -1,54 +1,47 @@
-# FM27 Tactical Bible (web)
+# FM27 Tactical Bible
 
-An interactive, installable guide to Football Manager 27 roles, team and player instructions, and tactical concepts.
-Every role and instruction page embeds a live 2D pitch: change a player's attributes, roles or instructions and see the effect on him and on the team, side by side with an unchanged baseline.
+An interactive, single-page tactical guide and pitch board for Football Manager 27 roles, team and player instructions, tactical concepts, attributes, and match-management playbooks.
 
-> **Model disclaimer.** The simulation is a model of the FM match engine's intent, tuned by hand. It is not the engine.
-> Every parameter carries a source tag: **CONF** = confirmed by public sources, **EST** = estimated.
+> **Model disclaimer.** Pitch shapes, 3×3 ball-zone shifts, 35-zone coverage scores, and tactical diagnostics are an educational model of FM27 tactical intent, not the Football Manager match engine. Verified public references carry `CONF` citations; estimated tactical weights carry `EST` notes. Open **Guides → Sources & Model** for all 17 verified sources.
 
-## What's inside
+## Architecture
+
+Single-project **Vite 7 + React 19 + TypeScript + `@ui-sdk/react`** SPA with a unified horizontal 105×68 SVG pitch (`src/components/PitchSvg.tsx`) and a pure deterministic tactical engine (`src/engine/`).
 
 | Path | What it is |
 | --- | --- |
-| `packages/sim` | Deterministic agent simulation in pure TypeScript (no DOM). Attributes drive perception, decisions, movement and execution through `ATTR_MODEL` (`src/attributes.ts`); team shape and phases live in `src/tactics.ts`; `resolveMods` (`src/mods.ts`) is the only place role profiles, team instructions and player instructions combine. |
-| `packages/content` | The knowledge base (`data/*.json`), role profiles (`src/roles/profiles.ts` = generated drafts + hand `OVERRIDES`), instruction effects (`src/instructions/effects.ts`) and the 136 lesson scenes (`src/scenes/`). |
-| `apps/web` | Astro 5 static site with React 19 islands, PixiJS v8 renderer and ui-sdk controls. MDX content lives in `src/content/`. |
+| `src/data/` | Structured English knowledge base: 77 FM26/FM27 roles (39 IP + 38 OOP with FM24 legacy equivalents), 17 formations, 27 Team Instructions across 5 areas, 24 Player Instructions (including the 5 FM27 Box-Attacking PIs and symmetric mutual exclusions), 7 Mentalities, 6 validated FM27 tactical presets, 47 Attributes with `FM27_ME_WEIGHTS`, 10 Core Concepts, 6 Opponent Counter Guides, Opposition Instructions, 18 Player Traits, 12 Set-Piece Routines, 9 Troubleshooting Playbooks, FM27 In-Match Tweaks & Shouts, and 17 verified public sources. |
+| `src/engine/` | Pure deterministic TypeScript engine (no DOM/React imports, no `Math.random`): `pitch.ts` (bounds-clamped 105×68 diagram builders for tactics, 3×3 ball zones, all 77 roles, all 27 TIs, and all 24 PIs), `analysis.ts` (7×5 35-zone coverage heatmap, valid role-swap suggestions, IP↔OOP transition distances, FM27 Tactical Complexity & coherence diagnostics), `roleTools.ts` (Role Fit Finder & Side-by-Side Role Comparator), and `tacticIO.ts` (URL hash serialization, lossless `tactical-bible-v1` JSON export/import, and `.fmf` binary inspection). |
+| `src/components/` | Unified `PitchSvg`, 4-item responsive `Sidebar` (with mobile drawer), and global `Ctrl+K` / `⌘K` `SearchModal`. |
+| `src/views/` | Four focused views: `TacticsView`, `RolesView`, `InstructionsView`, and `GuidesView`. |
 
-### Pages
+## Four Sections
 
-- **Tactics board** (`/tactics`): choose your shapes with and without the ball, the opponent, mentality and every team instruction. "In possession" shows your team attacking, "Out of possession" shows the opponent attacking your block. Instruction pages deep-link into it (`?tab=ip|oop&ti=key:option`, `&pi=key&slot=CODE`).
-- **Role explorer** (every `/roles/<id>` page): pick formation and position, the role with and without the ball, then change attributes. Each role has its own short, looping clip (`packages/content/src/scenes/roleClips.ts`): only the scripted ball and the role's signature move act (an overlap, a press, a drop into the back line, staying up for the outlet), while everybody else just takes his tactical position. Clips work from any position the role fits; team-mates are picked by position code, and the script is mirrored for the other flank. The same clip replays beside a faded default player, and a "What changes" box lists the model numbers before/after and what he did differently.
-- **Instruction pages**: a static, build-time before/after diagram computed from the simulation, plus an "Open in tactics board" button.
-- **Concept pages**: explanatory pitch diagrams; interactive only where a control teaches something (width, pressing coherence, IP/OOP, rest-defence, box, outlets).
-- **Sandbox** (`/lab`): free play on either team.
+1. **Tactics Board** — Pitch-first workspace with `Shape`, `3×3 Zones`, and `Coverage` modes, `In Possession` / `Out of Possession` / `Combined` phase switching, 6 curated FM27 presets, shareable URL links, `.json` / `.fmf` import & export, clickable role-swap fixes, and a 3-tab right panel:
+   - **Setup**: IP/OOP formations, Mentality, inline Opponent Counter & OI tips, and grouped Team Instructions with 1-click inspection links.
+   - **Player**: Click any pitch token to edit paired IP & OOP roles and position-filtered Player Instructions (automatically enforcing mutual exclusions).
+   - **Analysis**: Plain-English diagnostics (warnings first), FM27 Tactical Complexity & ~3-week decay guidance, structural metrics, and IP↔OOP shift distance table.
+2. **Roles** — Searchable catalog of all 77 IP & OOP roles (including FM24 legacy names) with live pitch diagrams, **Role Fit Finder** (archetype presets + Pure Role vs FM27 ME-Weighted scoring), and **Compare Roles** side-by-side comparator.
+3. **Instructions** — Interactive before/after pitch diagrams for all 27 Team Instructions and 24 Player Instructions (including FM27 Box-Attacking depth & target-zone PIs), attribute requirements, mutual exclusions, and 1-click "Open in Tactics Board".
+4. **Guides** — Tabbed reference covering Core Concepts, Attributes (all 47 + FM27 ME weights), Opponent Counters, Opposition Instructions, Player Traits, Set Pieces, Troubleshooting, In-Match Tweaks & Shouts, and Sources & Model methodology.
 
-Overlays: vision cone, decision options, press radii, runs, tactical positions, lines, trail. The "Why" panel shows the latest decision with its top terms. Attribute pages and role pages generate their model tables from `ATTR_MODEL`.
+Global **`Ctrl+K` / `⌘K`** quick search jumps straight to any preset, role, instruction, attribute, or guide from anywhere in the app.
 
 ## Commands
 
-Node 22 or newer.
+Requires Node 22 or newer.
 
 ```bash
 npm install
-npm run dev -w apps/web     # local dev server
-npm test                    # Vitest: sim behaviour + instruction effects + coverage + every role clip in every position plays through
-npm run typecheck           # tsc for sim/content, astro check for the web app
-npm run build               # static site in apps/web/dist (PWA included)
-npm run e2e                 # Playwright: Stay Wider widens the winger against the baseline
-npm run tuning:report       # regenerates packages/content/TUNING.md from the scenes
-npm run draft:profiles      # regenerates profiles.generated.ts from data/roles.json + role-anchors.json
-npm run seed:content        # creates missing MDX pages from data/*.json (never overwrites; --force to reset)
-npm run icons -w apps/web   # regenerates PWA icons from apps/web/public/icon.svg
+npm run dev         # Vite dev server
+npm test            # Vitest unit tests (data integrity + tactical engine)
+npm run typecheck   # Strict TypeScript check (tsc --noEmit)
+npm run build       # Production static bundle in dist/
+npm run e2e         # Playwright E2E test suite against built preview
 ```
 
-## Tuning
+## Deployment
 
-Tune only `OVERRIDES` in `packages/content/src/roles/profiles.ts`, `TI_EFFECTS`/`PI_EFFECTS` in `packages/content/src/instructions/effects.ts` and the constants in `packages/sim/src/attributes.ts`. Record the reason in the entry's `note`, regenerate `TUNING.md`, and set the row's status (`ok`, `tuned`, `open`) by hand after watching the scene.
+Hosted on Cloudflare Pages (project `tactical-bible-web`). Every push to `main` that passes CI is deployed by the `deploy` job in `.github/workflows/ci.yml`. It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (token with the *Cloudflare Pages: Edit* permission) and `CLOUDFLARE_ACCOUNT_ID`.
 
-## Knowledge base
-
-`packages/content/data/*.json` is this repo's own English knowledge base (77 roles, 27 team instructions, 24 player instructions, 10 concepts, 47 attributes, formations, mentalities, opponents and per-role reference positions). It was extracted once from the earlier Tactical Architect app and is now edited here directly; nothing reads that app at build or run time.
-
-## Hosting
-
-The build output is plain static files with relative-to-`base` URLs, so any static host works. On Cloudflare Pages use build command `npm run build` and output directory `apps/web/dist`. The site is a PWA: it is precached, works offline and can be installed.
+Manual deploy: `npm run build && npx wrangler pages deploy dist --project-name=tactical-bible-web`.
