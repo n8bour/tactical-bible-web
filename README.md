@@ -42,6 +42,6 @@ npm run e2e         # Playwright E2E test suite against built preview
 
 ## Deployment
 
-Hosted on Cloudflare Pages (project `tactical-bible-web`). Every push to `main` that passes CI is deployed by the `deploy` job in `.github/workflows/ci.yml`. It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (token with the *Cloudflare Pages: Edit* permission) and `CLOUDFLARE_ACCOUNT_ID`.
+Hosted on Cloudflare Workers as static assets (Worker `tactical-bible-web`, config in `wrangler.jsonc`; unknown paths fall back to `index.html`). Every push to `main` that passes CI is deployed by the `deploy` job in `.github/workflows/ci.yml`. It needs two repository secrets: `CLOUDFLARE_API_TOKEN` (token with the *Workers Scripts: Edit* account permission) and `CLOUDFLARE_ACCOUNT_ID`.
 
-Manual deploy: `npm run build && npx wrangler pages deploy dist --project-name=tactical-bible-web`.
+Manual deploy: `npm run build && npx wrangler deploy`.
