@@ -79,8 +79,12 @@ function softX(x: number, minX = SAFE_X_MIN + 0.5, maxX = SAFE_X_MAX - 0.5): num
   return x;
 }
 
-function separateOverlappingTokens(players: PitchPlayerToken[]): PitchPlayerToken[] {
-  const minDist = 6.9;
+function separateOverlappingTokens(
+  players: PitchPlayerToken[],
+  allowTightShadow = false,
+): PitchPlayerToken[] {
+  const sameTeamMinDist = 6.9;
+  const crossTeamMinDist = allowTightShadow ? 4.2 : 6.4;
   const pts = players.map((p) => ({
     ...p,
     anchored: p.slot === 'GK' || Boolean(p.highlight),
@@ -92,7 +96,7 @@ function separateOverlappingTokens(players: PitchPlayerToken[]): PitchPlayerToke
       for (let j = i + 1; j < pts.length; j++) {
         const a = pts[i];
         const b = pts[j];
-        if (a.team !== b.team) continue;
+        const minDist = a.team === b.team ? sameTeamMinDist : crossTeamMinDist;
 
         const dx = b.x - a.x;
         const dy = b.y - a.y;
@@ -146,7 +150,10 @@ function sanitizeDiagram(diagram: PitchDiagram): PitchDiagram {
     return next;
   });
 
-  const players = separateOverlappingTokens(clampedPlayers);
+  const players = separateOverlappingTokens(
+    clampedPlayers,
+    diagram.title === 'Mark Tighter',
+  );
 
   const arrows: PitchArrow[] = diagram.arrows.map((a) => ({
     ...a,

@@ -143,36 +143,115 @@ function pickCellScoreAnchor(
   return best;
 }
 
-function pickHighlightLabelPos(
-  hl: { x: number; y: number; r: number; label: string },
-  players: readonly PitchPlayerToken[],
-): { x: number; y: number; estWidth: number } {
-  const estWidth = clamp(hl.label.length * 1.28 + 3.2, 10, 30);
-  const halfW = estWidth / 2;
-  const rawCandidates = [
-    { x: hl.x, y: hl.y - hl.r - 1.8 },
-    { x: hl.x, y: hl.y + hl.r + 2.4 },
-    { x: hl.x - hl.r - halfW - 1.2, y: hl.y + 0.5 },
-    { x: hl.x + hl.r + halfW + 1.2, y: hl.y + 0.5 },
-  ];
+interface LabelBox {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
 
-  let best = {
-    x: clamp(rawCandidates[0].x, halfW + 1, PITCH_LENGTH - halfW - 1),
-    y: clamp(rawCandidates[0].y, 3.4, PITCH_WIDTH - 2.4),
-  };
-  let bestDist = -1;
-
-  for (const cand of rawCandidates) {
-    const cx = clamp(cand.x, halfW + 1, PITCH_LENGTH - halfW - 1);
-    const cy = clamp(cand.y, 3.4, PITCH_WIDTH - 2.4);
-    const d = minPlayerDist(cx, cy, players);
-    if (d > bestDist) {
-      bestDist = d;
-      best = { x: cx, y: cy };
+function buildOccupiedBoxes(players: readonly PitchPlayerToken[], compact: boolean): LabelBox[] {
+  const boxes: LabelBox[] = [];
+  for (const p of players) {
+    const px = clamp(p.x, 1.5, PITCH_LENGTH - 1.5);
+    const py = clamp(p.y, 1.5, PITCH_WIDTH - 1.5);
+    boxes.push({ x1: px - 3.5, y1: py - 3.5, x2: px + 3.5, y2: py + 3.5 });
+    if (p.sublabel && !compact) {
+      const sublabelAbove = py > PITCH_WIDTH - 8.5;
+      const subEstW = clamp(p.sublabel.length * 1.18 + 2.0, 5.5, 22);
+      const desiredAbsX = clamp(px, subEstW / 2 - 1.5, PITCH_LENGTH - subEstW / 2 + 1.5);
+      const subCy = py + (sublabelAbove ? -(2.65 + 2.3) : 3.05 + 2.55);
+      boxes.push({
+        x1: desiredAbsX - subEstW / 2 - 0.4,
+        y1: subCy - 1.7,
+        x2: desiredAbsX + subEstW / 2 + 0.4,
+        y2: subCy + 1.1,
+      });
     }
   }
+  return boxes;
+}
 
-  return { ...best, estWidth };
+function boxOverlapArea(a: LabelBox, b: LabelBox): number {
+  const ox = Math.max(0, Math.min(a.x2, b.x2) - Math.max(a.x1, b.x1));
+  const oy = Math.max(0, Math.min(a.y2, b.y2) - Math.max(a.y1, b.y1));
+  return ox * oy;
+}
+
+function boxMinClearance(a: LabelBox, occupied: readonly LabelBox[]): number {
+  let min = Infinity;
+  const cx = (a.x1 + a.x2) / 2;
+  const cy = (a.y1 + a.y2) / 2;
+  for (const b of occupied) {
+    const bx = (b.x1 + b.x2) / 2;
+    const by = (b.y1 + b.y2) / 2;
+    const d = Math.hypot(cx - bx, cy - by);
+    if (d < min) min = d;
+  }
+  return min;
+}
+
+function placeLabelBox(
+  candidates: readonly { x: number; y: number }[],
+  width: number,
+  height: number,
+  occupied: LabelBox[],
+): { x: number; y: number } {
+  const halfW = width / 2;
+  const halfH = height / 2;
+  let best = {
+    x: clamp(candidates[0].x, halfW + 1, PITCH_LENGTH - halfW - 1),
+    y: clamp(candidates[0].y, halfH + 1.2, PITCH_WIDTH - halfH - 1.2),
+  };
+  let bestOverlap = Infinity;
+  let bestClearance = -1;
+
+  const tryCandidates = (list: readonly { x: number; y: number }[]) => {
+    for (const cand of list) {
+      const cx = clamp(cand.x, halfW + 1, PITCH_LENGTH - halfW - 1);
+      const cy = clamp(cand.y, halfH + 1.2, PITCH_WIDTH - halfH - 1.2);
+      const box: LabelBox = {
+        x1: cx - halfW - 0.35,
+        y1: cy - halfH - 0.35,
+        x2: cx + halfW + 0.35,
+        y2: cy + halfH + 0.35,
+      };
+      let totalOverlap = 0;
+      for (const occ of occupied) {
+        totalOverlap += boxOverlapArea(box, occ);
+      }
+      const clearance = boxMinClearance(box, occupied);
+      if (
+        totalOverlap < bestOverlap - 0.01 ||
+        (Math.abs(totalOverlap - bestOverlap) <= 0.01 && clearance > bestClearance)
+      ) {
+        bestOverlap = totalOverlap;
+        bestClearance = clearance;
+        best = { x: cx, y: cy };
+      }
+    }
+  };
+
+  tryCandidates(candidates);
+
+  if (bestOverlap > 0.01) {
+    const anchor = candidates[0];
+    const wide: { x: number; y: number }[] = [];
+    for (const dy of [-5.5, 5.5, -8.5, 8.5, -12, 12]) {
+      for (const dx of [0, -7, 7, -14, 14]) {
+        wide.push({ x: anchor.x + dx, y: anchor.y + dy });
+      }
+    }
+    tryCandidates(wide);
+  }
+
+  occupied.push({
+    x1: best.x - halfW - 0.3,
+    y1: best.y - halfH - 0.3,
+    x2: best.x + halfW + 0.3,
+    y2: best.y + halfH + 0.3,
+  });
+  return best;
 }
 
 export function PitchSvg({
@@ -194,14 +273,103 @@ export function PitchSvg({
   const label = ariaLabel ?? `${diagram.title}${diagram.subtitle ? `: ${diagram.subtitle}` : ''}`;
 
   // Stagger vertical line badges when two tactical lines sit close together horizontally.
-  const lineBadges = (diagram.lines ?? []).map((line, index, arr) => {
+  const lineBadges: {
+    line: PitchLine;
+    x: number;
+    estWidth: number;
+    badgeX: number;
+    badgeY: number;
+  }[] = [];
+  for (const line of diagram.lines ?? []) {
     const x = clamp(line.x, 1.5, PITCH_LENGTH - 1.5);
-    const estWidth = clamp(line.label.length * 1.35 + 3.2, 10, 28);
+    const estWidth = clamp(line.label.length * 1.35 + 3.4, 10, 32);
     const badgeX = clamp(x, estWidth / 2 + 0.8, PITCH_LENGTH - estWidth / 2 - 0.8);
-    const overlapsPrev =
-      index > 0 && Math.abs(clamp(arr[index - 1].x, 1.5, PITCH_LENGTH - 1.5) - x) < estWidth + 2;
-    const badgeY = overlapsPrev ? 7.2 : 2.8;
-    return { line, x, estWidth, badgeX, badgeY };
+    const overlapsPrev = lineBadges.some(
+      (prev) =>
+        prev.badgeY < 5 &&
+        Math.abs(prev.badgeX - badgeX) < (prev.estWidth + estWidth) / 2 + 1.5,
+    );
+    const badgeY = overlapsPrev ? 6.8 : 2.8;
+    lineBadges.push({ line, x, estWidth, badgeX, badgeY });
+  }
+
+  // Precompute non-overlapping label positions for highlights and arrows
+  const occupied = buildOccupiedBoxes(diagram.players, compact);
+  for (const lb of lineBadges) {
+    occupied.push({
+      x1: lb.badgeX - lb.estWidth / 2,
+      y1: lb.badgeY - 1.75,
+      x2: lb.badgeX + lb.estWidth / 2,
+      y2: lb.badgeY + 1.45,
+    });
+  }
+
+  const placedHighlights = (diagram.highlights ?? []).map((hl) => {
+    const stroke =
+      hl.kind === 'press'
+        ? 'rgba(251, 113, 133, 0.62)'
+        : hl.kind === 'target'
+          ? 'rgba(251, 191, 36, 0.72)'
+          : 'rgba(56, 189, 248, 0.54)';
+    const fill =
+      hl.kind === 'press'
+        ? 'rgba(251, 113, 133, 0.14)'
+        : hl.kind === 'target'
+          ? 'rgba(251, 191, 36, 0.16)'
+          : 'rgba(56, 189, 248, 0.14)';
+    if (!hl.label || compact) {
+      return { hl, fill, stroke, labelPos: null as { x: number; y: number; estWidth: number } | null };
+    }
+    const estWidth = clamp(hl.label.length * 1.28 + 3.2, 10, 30);
+    const halfW = estWidth / 2;
+    const pos = placeLabelBox(
+      [
+        { x: hl.x, y: hl.y - hl.r - 2.0 },
+        { x: hl.x, y: hl.y + hl.r + 2.2 },
+        { x: hl.x - hl.r - halfW - 1.4, y: hl.y },
+        { x: hl.x + hl.r + halfW + 1.4, y: hl.y },
+        { x: hl.x - halfW, y: hl.y - hl.r - 2.4 },
+        { x: hl.x + halfW, y: hl.y + hl.r + 2.6 },
+      ],
+      estWidth,
+      2.85,
+      occupied,
+    );
+    return { hl, fill, stroke, labelPos: { ...pos, estWidth } };
+  });
+
+  const placedArrows = diagram.arrows.map((arrow) => {
+    const geom = shortenArrow(arrow, tokenR * 0.72, tokenR * 0.55);
+    if (!geom) return null;
+    const stroke = ARROW_COLOR[arrow.kind];
+    const isDashed = arrow.dashed ?? (arrow.kind === 'compare' || arrow.kind === 'press');
+    let labelBox: { x: number; y: number; width: number } | null = null;
+    if (arrow.label && !compact) {
+      const labelW = clamp(arrow.label.length * 1.25 + 2.8, 8, 28);
+      const dx = geom.x2 - geom.x1;
+      const dy = geom.y2 - geom.y1;
+      const len = Math.max(1, Math.hypot(dx, dy));
+      const ux = dx / len;
+      const uy = dy / len;
+      const nx = -uy;
+      const ny = ux;
+      const cands: { x: number; y: number }[] = [];
+      for (const t of [0.5, 0.35, 0.65]) {
+        const ax = geom.x1 + dx * t;
+        const ay = geom.y1 + dy * t;
+        cands.push(
+          { x: ax + nx * 2.6, y: ay + ny * 2.6 },
+          { x: ax - nx * 2.6, y: ay - ny * 2.6 },
+          { x: ax, y: ay - 2.8 },
+          { x: ax, y: ay + 2.8 },
+          { x: ax + nx * 4.8, y: ay + ny * 4.8 },
+          { x: ax - nx * 4.8, y: ay - ny * 4.8 },
+        );
+      }
+      const pos = placeLabelBox(cands, labelW, 2.9, occupied);
+      labelBox = { x: pos.x, y: pos.y, width: labelW };
+    }
+    return { arrow, geom, stroke, isDashed, labelBox };
   });
 
   // Derive fallback ball coordinates when ballZone is active but diagram.ball is omitted.
@@ -448,151 +616,62 @@ export function PitchSvg({
         )}
 
         {/* Highlights (press radius, zones, box targets) */}
-        {diagram.highlights && diagram.highlights.length > 0 && (
+        {placedHighlights.length > 0 && (
           <g pointerEvents="none">
-            {diagram.highlights.map((hl, idx) => {
-              const color =
-                hl.kind === 'press'
-                  ? { fill: 'rgba(251, 113, 133, 0.14)', stroke: 'rgba(251, 113, 133, 0.62)' }
-                  : hl.kind === 'target'
-                    ? { fill: 'rgba(251, 191, 36, 0.16)', stroke: 'rgba(251, 191, 36, 0.72)' }
-                    : { fill: 'rgba(56, 189, 248, 0.14)', stroke: 'rgba(56, 189, 248, 0.54)' };
-              const labelPos =
-                hl.label && !compact
-                  ? pickHighlightLabelPos({ ...hl, label: hl.label }, diagram.players)
-                  : null;
-              return (
-                <g key={idx}>
-                  <circle
-                    cx={hl.x}
-                    cy={hl.y}
-                    r={hl.r}
-                    fill={color.fill}
-                    stroke={color.stroke}
-                    strokeWidth={0.36}
-                    strokeDasharray={hl.kind === 'press' ? '1.5 1.1' : undefined}
-                  />
-                  {hl.label && labelPos && (
-                    <g transform={`translate(${labelPos.x}, ${labelPos.y})`}>
-                      <rect
-                        x={-labelPos.estWidth / 2}
-                        y={-1.65}
-                        width={labelPos.estWidth}
-                        height={2.85}
-                        rx={0.8}
-                        fill="rgba(11, 14, 13, 0.86)"
-                        stroke={color.stroke}
-                        strokeWidth={0.2}
-                      />
-                      <text
-                        y={0.42}
-                        textAnchor="middle"
-                        fill="#f0f4f1"
-                        fontSize={1.85}
-                        fontWeight={600}
-                      >
-                        {hl.label}
-                      </text>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
+            {placedHighlights.map(({ hl, fill, stroke }, idx) => (
+              <circle
+                key={idx}
+                cx={hl.x}
+                cy={hl.y}
+                r={hl.r}
+                fill={fill}
+                stroke={stroke}
+                strokeWidth={0.36}
+                strokeDasharray={hl.kind === 'press' ? '1.5 1.1' : undefined}
+              />
+            ))}
           </g>
         )}
 
         {/* Vertical tactical lines (Defensive Line, LoE, Offside) */}
         {lineBadges.length > 0 && (
           <g pointerEvents="none">
-            {lineBadges.map(({ line, x, estWidth, badgeX, badgeY }, idx) => {
-              const stroke = LINE_COLOR[line.kind];
-              return (
-                <g key={`${line.kind}-${idx}`}>
-                  <line
-                    x1={x}
-                    y1={0.4}
-                    x2={x}
-                    y2={PITCH_WIDTH - 0.4}
-                    stroke={stroke}
-                    strokeWidth={0.42}
-                    strokeDasharray="2 1.4"
-                    opacity={0.85}
-                  />
-                  <rect
-                    x={badgeX - estWidth / 2}
-                    y={badgeY - 1.75}
-                    width={estWidth}
-                    height={3.2}
-                    rx={0.9}
-                    fill="rgba(11, 17, 22, 0.88)"
-                    stroke={stroke}
-                    strokeWidth={0.25}
-                  />
-                  <text
-                    x={badgeX}
-                    y={badgeY + 0.55}
-                    textAnchor="middle"
-                    fill={stroke}
-                    fontSize={1.85}
-                    fontWeight={700}
-                  >
-                    {line.label}
-                  </text>
-                </g>
-              );
-            })}
+            {lineBadges.map(({ line, x }, idx) => (
+              <line
+                key={`${line.kind}-${idx}`}
+                x1={x}
+                y1={0.4}
+                x2={x}
+                y2={PITCH_WIDTH - 0.4}
+                stroke={LINE_COLOR[line.kind]}
+                strokeWidth={0.42}
+                strokeDasharray="2 1.4"
+                opacity={0.85}
+              />
+            ))}
           </g>
         )}
 
         {/* Arrows (runs, movement, passes, pressing, comparison) */}
-        {diagram.arrows.length > 0 && (
+        {placedArrows.length > 0 && (
           <g pointerEvents="none">
-            {diagram.arrows.map((arrow, idx) => {
-              const geom = shortenArrow(arrow, tokenR * 0.72, tokenR * 0.55);
-              if (!geom) return null;
-              const stroke = ARROW_COLOR[arrow.kind];
-              const isDashed =
-                arrow.dashed ?? (arrow.kind === 'compare' || arrow.kind === 'press');
-              const labelW = arrow.label ? clamp(arrow.label.length * 1.25 + 2.6, 8, 26) : 0;
-              const lx = clamp(geom.mx, labelW / 2 + 1, PITCH_LENGTH - labelW / 2 - 1);
-              const ly = clamp(geom.my - 1.6, 3.6, PITCH_WIDTH - 2.6);
+            {placedArrows.map((item, idx) => {
+              if (!item) return null;
+              const { arrow, geom, stroke, isDashed } = item;
               return (
-                <g key={idx}>
-                  <line
-                    x1={geom.x1}
-                    y1={geom.y1}
-                    x2={geom.x2}
-                    y2={geom.y2}
-                    stroke={stroke}
-                    strokeWidth={arrow.kind === 'run' ? 0.55 : 0.45}
-                    strokeLinecap="round"
-                    strokeDasharray={isDashed ? '1.8 1.2' : undefined}
-                    markerEnd={`url(#arrow-${arrow.kind}-${uid})`}
-                    opacity={0.92}
-                  />
-                  {arrow.label && !compact && (
-                    <g>
-                      <rect
-                        x={lx - labelW / 2}
-                        y={ly - 1.65}
-                        width={labelW}
-                        height={2.9}
-                        rx={0.75}
-                        fill="rgba(11, 17, 22, 0.86)"
-                      />
-                      <text
-                        x={lx}
-                        y={ly + 0.45}
-                        textAnchor="middle"
-                        fill={stroke}
-                        fontSize={1.75}
-                        fontWeight={600}
-                      >
-                        {arrow.label}
-                      </text>
-                    </g>
-                  )}
-                </g>
+                <line
+                  key={idx}
+                  x1={geom.x1}
+                  y1={geom.y1}
+                  x2={geom.x2}
+                  y2={geom.y2}
+                  stroke={stroke}
+                  strokeWidth={arrow.kind === 'run' ? 0.55 : 0.45}
+                  strokeLinecap="round"
+                  strokeDasharray={isDashed ? '1.8 1.2' : undefined}
+                  markerEnd={`url(#arrow-${arrow.kind}-${uid})`}
+                  opacity={0.92}
+                />
               );
             })}
           </g>
@@ -761,6 +840,88 @@ export function PitchSvg({
               </g>
             );
           })}
+        </g>
+        {/* Top-most collision-free annotation labels (lines, highlights, arrows) */}
+        <g pointerEvents="none">
+          {lineBadges.map(({ line, estWidth, badgeX, badgeY }, idx) => {
+            const stroke = LINE_COLOR[line.kind];
+            return (
+              <g key={`line-lbl-${idx}`} transform={`translate(${badgeX}, ${badgeY})`}>
+                <rect
+                  x={-estWidth / 2}
+                  y={-1.75}
+                  width={estWidth}
+                  height={3.2}
+                  rx={0.9}
+                  fill="rgba(11, 14, 13, 0.9)"
+                  stroke={stroke}
+                  strokeWidth={0.25}
+                />
+                <text
+                  y={0.55}
+                  textAnchor="middle"
+                  fill={stroke}
+                  fontSize={1.85}
+                  fontWeight={700}
+                >
+                  {line.label}
+                </text>
+              </g>
+            );
+          })}
+
+          {placedHighlights.map(({ hl, stroke, labelPos }, idx) =>
+            hl.label && labelPos ? (
+              <g key={`hl-lbl-${idx}`} transform={`translate(${labelPos.x}, ${labelPos.y})`}>
+                <rect
+                  x={-labelPos.estWidth / 2}
+                  y={-1.45}
+                  width={labelPos.estWidth}
+                  height={2.85}
+                  rx={0.8}
+                  fill="rgba(11, 14, 13, 0.9)"
+                  stroke={stroke}
+                  strokeWidth={0.2}
+                />
+                <text
+                  y={0.55}
+                  textAnchor="middle"
+                  fill="#f0f4f1"
+                  fontSize={1.85}
+                  fontWeight={600}
+                >
+                  {hl.label}
+                </text>
+              </g>
+            ) : null,
+          )}
+
+          {placedArrows.map((item, idx) =>
+            item && item.arrow.label && item.labelBox ? (
+              <g
+                key={`arr-lbl-${idx}`}
+                transform={`translate(${item.labelBox.x}, ${item.labelBox.y})`}
+              >
+                <rect
+                  x={-item.labelBox.width / 2}
+                  y={-1.45}
+                  width={item.labelBox.width}
+                  height={2.9}
+                  rx={0.75}
+                  fill="rgba(11, 14, 13, 0.9)"
+                />
+                <text
+                  y={0.55}
+                  textAnchor="middle"
+                  fill={item.stroke}
+                  fontSize={1.75}
+                  fontWeight={600}
+                >
+                  {item.arrow.label}
+                </text>
+              </g>
+            ) : null,
+          )}
         </g>
       </svg>
     </div>

@@ -109,9 +109,10 @@ const LANE_LABELS: Record<BallZone['lane'], string> = {
   right: 'Right Lane',
 };
 
-function ChevronIcon() {
+function ChevronIcon({ className }: { className?: string }) {
   return (
     <svg
+      className={className}
       width="14"
       height="14"
       viewBox="0 0 16 16"
@@ -1309,19 +1310,12 @@ export function TacticsView({
                         >
                           <CollapsibleTrigger className="ti-group-trigger">
                             <span>{area}</span>
-                            <span className="row" style={{ gap: 8 }}>
-                              {activeCount > 0 && (
-                                <span
-                                  className="text-sm tabular-nums"
-                                  style={{ color: 'var(--accent)', fontWeight: 500 }}
-                                >
-                                  {activeCount} custom
-                                </span>
-                              )}
-                              <span className="ti-group-chevron">
-                                <ChevronIcon />
+                            {activeCount > 0 && (
+                              <span className="ti-group-count tabular-nums">
+                                {activeCount} active
                               </span>
-                            </span>
+                            )}
+                            <ChevronIcon className="ti-group-chevron" />
                           </CollapsibleTrigger>
 
                           <CollapsiblePanel className="ti-group-panel stack-sm">

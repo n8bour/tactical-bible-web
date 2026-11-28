@@ -679,8 +679,8 @@ a:hover {
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 8px 12px;
-  padding: 9px 12px;
+  gap: 8px 10px;
+  padding: 8px 12px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -697,9 +697,10 @@ a:hover {
   display: inline-flex;
   align-items: baseline;
   gap: 5px;
-  padding-inline: 9px;
+  padding-inline: 8px;
   border-right: 1px solid var(--border);
   font-size: var(--text-sm);
+  white-space: nowrap;
 }
 
 .metric-pair:first-child {
@@ -1072,9 +1073,8 @@ a:hover {
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  min-height: 34px;
+  min-height: 36px;
   padding: 4px 0;
   border: 0;
   background: transparent;
@@ -1089,11 +1089,24 @@ a:hover {
   color: var(--accent);
 }
 
+.ti-group-count {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--accent);
+}
+
 .ti-group-chevron {
+  margin-left: auto;
   transition: transform 160ms var(--ease-out);
 }
 
-.ti-group-trigger[aria-expanded="true"] .ti-group-chevron {
+.ti-group-count + .ti-group-chevron {
+  margin-left: 0;
+}
+
+.ti-group-trigger[aria-expanded="true"] .ti-group-chevron,
+.ti-group-trigger[data-open] .ti-group-chevron {
   transform: rotate(180deg);
 }
 
