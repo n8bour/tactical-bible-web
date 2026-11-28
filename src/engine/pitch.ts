@@ -1579,8 +1579,8 @@ export function buildTeamInstructionDiagram(tiKey: string, optionIndex: number):
       ball = { x: gk.x + 2, y: gk.y };
       addShiftArrows('move');
       if (optIdx === 0) {
-        addAway('away-st', 'ST', 30, 30);
-        addAway('away-am', 'AM', 36, 42);
+        addAway('away-st', 'ST', 28, 27);
+        addAway('away-am', 'AM', 37, 46);
         if (dcl && dm) {
           arrows.push(
             { from: gk, to: dcl, kind: 'pass', label: 'Short build-up' },
@@ -1786,7 +1786,7 @@ export function buildTeamInstructionDiagram(tiKey: string, optionIndex: number):
 
     case 'dribbling':
       ball = aml ? { x: aml.x + 1, y: aml.y } : { x: 73, y: 12 };
-      addAway('away-fb', 'DR', 82, 14);
+      addAway('away-fb', 'DR', 86, 20);
       if (aml && mcl && st) {
         if (optIdx === 0) {
           arrows.push(
@@ -1795,12 +1795,12 @@ export function buildTeamInstructionDiagram(tiKey: string, optionIndex: number):
           );
         } else if (optIdx === 2) {
           arrows.push(
-            { from: aml, to: { x: 92, y: 18 }, kind: 'run', label: 'Attack 1v1' },
-            { from: mcl, to: { x: 72, y: 26 }, kind: 'run', label: 'Carry into space' },
+            { from: aml, to: { x: 94, y: 12 }, kind: 'run', label: 'Attack 1v1' },
+            { from: mcl, to: { x: 70, y: 26 }, kind: 'run', label: 'Carry into space' },
           );
         } else {
           arrows.push(
-            { from: aml, to: { x: 80, y: 14 }, kind: 'run', label: 'Carry if open' },
+            { from: aml, to: { x: 87, y: 11 }, kind: 'run', label: 'Carry if open' },
             { from: aml, to: st, kind: 'pass' },
           );
         }
@@ -2083,7 +2083,7 @@ function buildBoxDepthTrioDiagram(mode: 'standard' | 'arrive_late' | 'attack_the
     { id: 'home-dl', slot: 'DL', label: 'WB', x: 64, y: 11, team: 'home' },
     { id: 'home-aml', slot: 'AML', label: 'W', x: 80, y: 11, team: 'home' },
     { id: 'home-mcr', slot: 'MCR', label: 'CM', x: 68, y: 45, team: 'home' },
-    { id: 'home-amr', slot: 'AMR', label: 'IF', x: 82, y: 50, team: 'home' },
+    { id: 'home-amr', slot: 'AMR', label: 'IF', x: 78, y: 53, team: 'home' },
     // Opponent defensive line pinned cleanly at x = 87 m
     { id: 'away-gk', slot: 'GK', label: 'GK', x: 99, y: 34, team: 'away' },
     { id: 'away-dr', slot: 'DR', label: 'FB', x: 87, y: 14, team: 'away' },
@@ -2186,7 +2186,7 @@ function buildBoxDepthTrioDiagram(mode: 'standard' | 'arrive_late' | 'attack_the
       from: { x: 86.5, y: 34 },
       to: { x: 95, y: 32 },
       kind: 'run',
-      label: 'Dart across / in behind',
+      label: 'Dart in behind',
     },
     {
       from: { x: 80, y: 12 },
@@ -2452,10 +2452,10 @@ export function buildPlayerInstructionDiagram(
     }
     case 'move_into_channels': {
       const t = highlightSlot('ST', 'Peels diagonally into the gap between CB and FB');
-      addAway('away-cb', 'CB', 87, 29);
-      addAway('away-fb', 'DR', 87, 13);
-      arrows.push({ from: t, to: { x: 93, y: 20 }, kind: 'run', label: 'Attacks CB–FB channel' });
-      highlights.push({ x: 93, y: 20, r: 5.5, kind: 'target', label: 'Channel gap' });
+      addAway('away-cb', 'CB', 90, 29);
+      addAway('away-fb', 'DR', 88, 12);
+      arrows.push({ from: t, to: { x: 94, y: 20 }, kind: 'run', label: 'Attacks CB–FB channel' });
+      highlights.push({ x: 94, y: 20, r: 5.5, kind: 'target', label: 'Channel gap' });
       break;
     }
 

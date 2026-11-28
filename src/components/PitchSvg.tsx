@@ -178,33 +178,41 @@ function boxOverlapArea(a: LabelBox, b: LabelBox): number {
   return ox * oy;
 }
 
-function boxMinClearance(a: LabelBox, occupied: readonly LabelBox[]): number {
-  let min = Infinity;
-  const cx = (a.x1 + a.x2) / 2;
-  const cy = (a.y1 + a.y2) / 2;
-  for (const b of occupied) {
-    const bx = (b.x1 + b.x2) / 2;
-    const by = (b.y1 + b.y2) / 2;
-    const d = Math.hypot(cx - bx, cy - by);
-    if (d < min) min = d;
+interface ArrowSeg {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+}
+
+function segIntersectsBox(seg: ArrowSeg, box: LabelBox): boolean {
+  // Sample 9 points along the segment (fast and accurate for short SVG arrows)
+  for (let i = 0; i <= 8; i++) {
+    const t = i / 8;
+    const x = seg.x1 + (seg.x2 - seg.x1) * t;
+    const y = seg.y1 + (seg.y2 - seg.y1) * t;
+    if (x >= box.x1 && x <= box.x2 && y >= box.y1 && y <= box.y2) return true;
   }
-  return min;
+  return false;
 }
 
 function placeLabelBox(
+  anchor: { x: number; y: number },
   candidates: readonly { x: number; y: number }[],
   width: number,
   height: number,
   occupied: LabelBox[],
+  arrowSegs: readonly ArrowSeg[],
 ): { x: number; y: number } {
   const halfW = width / 2;
   const halfH = height / 2;
   let best = {
-    x: clamp(candidates[0].x, halfW + 1, PITCH_LENGTH - halfW - 1),
-    y: clamp(candidates[0].y, halfH + 1.2, PITCH_WIDTH - halfH - 1.2),
+    x: clamp(anchor.x, halfW + 1, PITCH_LENGTH - halfW - 1),
+    y: clamp(anchor.y, halfH + 1.2, PITCH_WIDTH - halfH - 1.2),
   };
   let bestOverlap = Infinity;
-  let bestClearance = -1;
+  let bestArrowHits = Infinity;
+  let bestAnchorDist = Infinity;
 
   const tryCandidates = (list: readonly { x: number; y: number }[]) => {
     for (const cand of list) {
@@ -220,13 +228,22 @@ function placeLabelBox(
       for (const occ of occupied) {
         totalOverlap += boxOverlapArea(box, occ);
       }
-      const clearance = boxMinClearance(box, occupied);
-      if (
-        totalOverlap < bestOverlap - 0.01 ||
-        (Math.abs(totalOverlap - bestOverlap) <= 0.01 && clearance > bestClearance)
-      ) {
+      let arrowHits = 0;
+      for (const seg of arrowSegs) {
+        if (segIntersectsBox(seg, box)) arrowHits += 1;
+      }
+      const anchorDist = Math.hypot(cx - anchor.x, cy - anchor.y);
+
+      const betterOverlap = totalOverlap < bestOverlap - 0.05;
+      const sameOverlap = Math.abs(totalOverlap - bestOverlap) <= 0.05;
+      const betterArrows = sameOverlap && arrowHits < bestArrowHits;
+      const sameArrows = sameOverlap && arrowHits === bestArrowHits;
+      const closerToAnchor = sameArrows && anchorDist < bestAnchorDist;
+
+      if (betterOverlap || betterArrows || closerToAnchor) {
         bestOverlap = totalOverlap;
-        bestClearance = clearance;
+        bestArrowHits = arrowHits;
+        bestAnchorDist = anchorDist;
         best = { x: cx, y: cy };
       }
     }
@@ -234,22 +251,22 @@ function placeLabelBox(
 
   tryCandidates(candidates);
 
-  if (bestOverlap > 0.01) {
-    const anchor = candidates[0];
-    const wide: { x: number; y: number }[] = [];
-    for (const dy of [-5.5, 5.5, -8.5, 8.5, -12, 12]) {
-      for (const dx of [0, -7, 7, -14, 14]) {
-        wide.push({ x: anchor.x + dx, y: anchor.y + dy });
+  // Local tight fallback ring only (max ~7.5 units) so labels never detach onto another player's arrow
+  if (bestOverlap > 0.05) {
+    const localRing: { x: number; y: number }[] = [];
+    for (const dy of [-3.5, 3.5, -5.8, 5.8]) {
+      for (const dx of [0, -4.5, 4.5, -8.5, 8.5]) {
+        localRing.push({ x: anchor.x + dx, y: anchor.y + dy });
       }
     }
-    tryCandidates(wide);
+    tryCandidates(localRing);
   }
 
   occupied.push({
-    x1: best.x - halfW - 0.3,
-    y1: best.y - halfH - 0.3,
-    x2: best.x + halfW + 0.3,
-    y2: best.y + halfH + 0.3,
+    x1: best.x - halfW - 0.35,
+    y1: best.y - halfH - 0.35,
+    x2: best.x + halfW + 0.35,
+    y2: best.y + halfH + 0.35,
   });
   return best;
 }
@@ -304,6 +321,14 @@ export function PitchSvg({
     });
   }
 
+  const arrowGeoms = diagram.arrows.map((arrow) => ({
+    arrow,
+    geom: shortenArrow(arrow, tokenR * 0.72, tokenR * 0.55),
+  }));
+  const allArrowSegs: ArrowSeg[] = arrowGeoms
+    .filter((a): a is { arrow: PitchArrow; geom: NonNullable<typeof a.geom> } => Boolean(a.geom))
+    .map(({ geom }) => ({ x1: geom.x1, y1: geom.y1, x2: geom.x2, y2: geom.y2 }));
+
   const placedHighlights = (diagram.highlights ?? []).map((hl) => {
     const stroke =
       hl.kind === 'press'
@@ -323,23 +348,24 @@ export function PitchSvg({
     const estWidth = clamp(hl.label.length * 1.28 + 3.2, 10, 30);
     const halfW = estWidth / 2;
     const pos = placeLabelBox(
+      { x: hl.x, y: hl.y - hl.r - 2.0 },
       [
         { x: hl.x, y: hl.y - hl.r - 2.0 },
         { x: hl.x, y: hl.y + hl.r + 2.2 },
-        { x: hl.x - hl.r - halfW - 1.4, y: hl.y },
         { x: hl.x + hl.r + halfW + 1.4, y: hl.y },
-        { x: hl.x - halfW, y: hl.y - hl.r - 2.4 },
-        { x: hl.x + halfW, y: hl.y + hl.r + 2.6 },
+        { x: hl.x - hl.r - halfW - 1.4, y: hl.y },
+        { x: hl.x - halfW * 0.6, y: hl.y - hl.r - 2.2 },
+        { x: hl.x + halfW * 0.6, y: hl.y + hl.r + 2.4 },
       ],
       estWidth,
       2.85,
       occupied,
+      allArrowSegs,
     );
     return { hl, fill, stroke, labelPos: { ...pos, estWidth } };
   });
 
-  const placedArrows = diagram.arrows.map((arrow) => {
-    const geom = shortenArrow(arrow, tokenR * 0.72, tokenR * 0.55);
+  const placedArrows = arrowGeoms.map(({ arrow, geom }) => {
     if (!geom) return null;
     const stroke = ARROW_COLOR[arrow.kind];
     const isDashed = arrow.dashed ?? (arrow.kind === 'compare' || arrow.kind === 'press');
@@ -353,20 +379,21 @@ export function PitchSvg({
       const uy = dy / len;
       const nx = -uy;
       const ny = ux;
+      const anchor = { x: geom.mx, y: geom.my };
       const cands: { x: number; y: number }[] = [];
-      for (const t of [0.5, 0.35, 0.65]) {
+      for (const t of [0.5, 0.4, 0.6]) {
         const ax = geom.x1 + dx * t;
         const ay = geom.y1 + dy * t;
         cands.push(
-          { x: ax + nx * 2.6, y: ay + ny * 2.6 },
-          { x: ax - nx * 2.6, y: ay - ny * 2.6 },
-          { x: ax, y: ay - 2.8 },
-          { x: ax, y: ay + 2.8 },
-          { x: ax + nx * 4.8, y: ay + ny * 4.8 },
-          { x: ax - nx * 4.8, y: ay - ny * 4.8 },
+          { x: ax + nx * 2.5, y: ay + ny * 2.5 },
+          { x: ax - nx * 2.5, y: ay - ny * 2.5 },
+          { x: ax, y: ay - 2.6 },
+          { x: ax, y: ay + 2.6 },
+          { x: ax + nx * 4.2, y: ay + ny * 4.2 },
+          { x: ax - nx * 4.2, y: ay - ny * 4.2 },
         );
       }
-      const pos = placeLabelBox(cands, labelW, 2.9, occupied);
+      const pos = placeLabelBox(anchor, cands, labelW, 2.9, occupied, allArrowSegs);
       labelBox = { x: pos.x, y: pos.y, width: labelW };
     }
     return { arrow, geom, stroke, isDashed, labelBox };

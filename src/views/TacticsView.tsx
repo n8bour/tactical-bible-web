@@ -1328,12 +1328,8 @@ export function TacticsView({
                               }));
 
                               return (
-                                <div
-                                  key={ti.key}
-                                  className="row-between"
-                                  style={{ gap: 8, alignItems: 'center' }}
-                                >
-                                  <div className="row" style={{ gap: 4, minWidth: 0 }}>
+                                <div key={ti.key} className="ti-row">
+                                  <div className="ti-row-label">
                                     <span
                                       className="text-sm"
                                       style={{
@@ -1348,9 +1344,9 @@ export function TacticsView({
                                     </span>
                                     {onJumpToInstruction && (
                                       <Button
-                                        className="btn btn--ghost btn--sm"
-                                        style={{ height: 24, padding: '0 6px' }}
+                                        className="btn btn--ghost btn--sm ti-row-inspect"
                                         aria-label={`Inspect ${ti.name} instruction`}
+                                        title={`Inspect ${ti.name} in Instructions`}
                                         onClick={() => onJumpToInstruction('ti', ti.key)}
                                       >
                                         ↗
@@ -1358,38 +1354,36 @@ export function TacticsView({
                                     )}
                                   </div>
 
-                                  <div style={{ width: 164, flexShrink: 0 }}>
-                                    <Select
-                                      items={optionItems}
-                                      value={String(currentVal)}
-                                      onValueChange={(v) => handleTiChange(ti.key, v)}
+                                  <Select
+                                    items={optionItems}
+                                    value={String(currentVal)}
+                                    onValueChange={(v) => handleTiChange(ti.key, v)}
+                                  >
+                                    <SelectTrigger
+                                      aria-label={ti.name}
+                                      style={{
+                                        width: '100%',
+                                        height: 32,
+                                        fontSize: 'var(--text-sm)',
+                                        borderColor: isCustom
+                                          ? 'var(--accent-border)'
+                                          : undefined,
+                                      }}
                                     >
-                                      <SelectTrigger
-                                        aria-label={ti.name}
-                                        style={{
-                                          width: '100%',
-                                          height: 32,
-                                          fontSize: 'var(--text-sm)',
-                                          borderColor: isCustom
-                                            ? 'var(--accent-border)'
-                                            : undefined,
-                                        }}
-                                      >
-                                        <SelectValue />
-                                        <ChevronIcon />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        {ti.options.map((opt, idx) => (
-                                          <SelectItem key={idx} value={String(idx)} label={opt}>
-                                            <span>{opt}</span>
-                                            <SelectItemIndicator>
-                                              <CheckIcon />
-                                            </SelectItemIndicator>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
+                                      <SelectValue />
+                                      <ChevronIcon />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {ti.options.map((opt, idx) => (
+                                        <SelectItem key={idx} value={String(idx)} label={opt}>
+                                          <span>{opt}</span>
+                                          <SelectItemIndicator>
+                                            <CheckIcon />
+                                          </SelectItemIndicator>
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
                                 </div>
                               );
                             })}
