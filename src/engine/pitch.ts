@@ -79,8 +79,59 @@ function softX(x: number, minX = SAFE_X_MIN + 0.5, maxX = SAFE_X_MAX - 0.5): num
   return x;
 }
 
+function separateOverlappingTokens(players: PitchPlayerToken[]): PitchPlayerToken[] {
+  const minDist = 6.9;
+  const pts = players.map((p) => ({
+    ...p,
+    anchored: p.slot === 'GK' || Boolean(p.highlight),
+  }));
+
+  for (let pass = 0; pass < 8; pass++) {
+    let moved = false;
+    for (let i = 0; i < pts.length; i++) {
+      for (let j = i + 1; j < pts.length; j++) {
+        const a = pts[i];
+        const b = pts[j];
+        if (a.team !== b.team) continue;
+
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const d = Math.hypot(dx, dy);
+        if (d >= minDist) continue;
+
+        const overlap = minDist - d;
+        const ux = d > 0.001 ? dx / d : 0;
+        const uy = d > 0.001 ? dy / d : 1;
+
+        if (a.anchored && b.anchored) continue;
+        if (a.anchored) {
+          const nextB = clampPlayable({ x: b.x + ux * overlap, y: b.y + uy * overlap });
+          b.x = nextB.x;
+          b.y = nextB.y;
+        } else if (b.anchored) {
+          const nextA = clampPlayable({ x: a.x - ux * overlap, y: a.y - uy * overlap });
+          a.x = nextA.x;
+          a.y = nextA.y;
+        } else {
+          const half = overlap * 0.5;
+          const nextA = clampPlayable({ x: a.x - ux * half, y: a.y - uy * half });
+          const nextB = clampPlayable({ x: b.x + ux * half, y: b.y + uy * half });
+          a.x = nextA.x;
+          a.y = nextA.y;
+          b.x = nextB.x;
+          b.y = nextB.y;
+        }
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
+
+  return pts.map(({ anchored: _anchored, ...rest }) => rest);
+}
+
 function sanitizeDiagram(diagram: PitchDiagram): PitchDiagram {
-  const players: PitchPlayerToken[] = diagram.players.map((p) => {
+  const clampedPlayers: PitchPlayerToken[] = diagram.players.map((p) => {
     const pos = clampPlayable({ x: p.x, y: p.y });
     const next: PitchPlayerToken = {
       ...p,
@@ -94,6 +145,8 @@ function sanitizeDiagram(diagram: PitchDiagram): PitchDiagram {
     }
     return next;
   });
+
+  const players = separateOverlappingTokens(clampedPlayers);
 
   const arrows: PitchArrow[] = diagram.arrows.map((a) => ({
     ...a,
@@ -284,6 +337,17 @@ export function resolveTacticPositions(
 
   const hasHalfBack =
     phase === 'ip' && form.slots.some((s) => getSlotRole(config, s, 'ip').id === 'hb');
+  const ifbSlot =
+    phase === 'ip'
+      ? form.slots.find((s) => getSlotRole(config, s, 'ip').id === 'ifb')
+      : undefined;
+  const ifbSide = ifbSlot
+    ? ifbSlot.y < PITCH_CY - 2
+      ? -1
+      : ifbSlot.y > PITCH_CY + 2
+        ? 1
+        : 0
+    : 0;
   const hasDdm =
     phase === 'oop' && form.slots.some((s) => getSlotRole(config, s, 'oop').id === 'ddm');
 
@@ -351,7 +415,7 @@ export function resolveTacticPositions(
         dy = 0;
       } else if (role.id === 'ifb') {
         x = Math.min(x, 25 + ment.shifts.line * 3.5);
-        dy = side * 10.5;
+        dy = side * 14.5;
       } else if (role.id === 'acb') {
         x += 8.5;
         dy *= 0.65;
@@ -369,6 +433,8 @@ export function resolveTacticPositions(
 
       if (hasHalfBack && slot.group === 'DC' && side !== 0) {
         dy += side * 3.5;
+      } else if (ifbSide !== 0 && slot.group === 'DC' && side !== 0) {
+        dy = side === ifbSide ? side * 1.5 : side * 12.5;
       }
 
       // Team Instructions (IP)
@@ -950,14 +1016,19 @@ export function buildRoleDiagram(roleId: string): PitchDiagram {
         { from: { x: 46, y: 58 }, to: { x: 73, y: 56 }, kind: 'pass' },
       );
       break;
-    case 'ifb':
+    case 'ifb': {
+      const dclMate = players.find((p) => p.slot === 'DCL');
+      const dcrMate = players.find((p) => p.slot === 'DCR');
+      if (dclMate) dclMate.y = 20;
+      if (dcrMate) dcrMate.y = 34;
       target.ghostX = target.x;
       target.ghostY = target.y;
       target.x = 23;
-      target.y = 47;
-      arrows.push({ from: { x: 26, y: 56 }, to: { x: 23, y: 47 }, kind: 'move', label: 'Forms back 3' });
+      target.y = 48;
+      arrows.push({ from: { x: 26, y: 56 }, to: { x: 23, y: 48 }, kind: 'move', label: 'Forms back 3' });
       highlights.push({ x: 22, y: 34, r: 14, kind: 'zone', label: '3-man rest defence' });
       break;
+    }
     case 'wb_ip':
       target.ghostX = target.x;
       target.ghostY = target.y;

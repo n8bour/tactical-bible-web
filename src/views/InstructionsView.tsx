@@ -47,7 +47,7 @@ interface PIOptionFamily {
 
 const PI_OPTION_FAMILIES: readonly PIOptionFamily[] = [
   {
-    label: 'Attack Box — Depth (FM27)',
+    label: 'Attack Box: Depth (FM27)',
     options: [
       { id: 'standard', label: 'Standard', diagramOption: 'standard' },
       {
@@ -65,7 +65,7 @@ const PI_OPTION_FAMILIES: readonly PIOptionFamily[] = [
     ],
   },
   {
-    label: 'Attack Box — Target Zone (FM27)',
+    label: 'Attack Box: Target Zone (FM27)',
     options: [
       { id: 'target_near_post', label: 'Near Post', piKey: 'target_near_post' },
       { id: 'target_centre', label: 'Centre', piKey: 'target_centre' },
@@ -284,8 +284,7 @@ export function InstructionsView({
     return (
       <Button
         key={key}
-        className="attr-chip attr-chip--key"
-        style={{ cursor: 'pointer' }}
+        className="interactive-chip interactive-chip--key"
         onClick={() => onJumpToAttribute(key)}
         title={`Inspect ${label} in Attributes Guide`}
       >
@@ -355,17 +354,7 @@ export function InstructionsView({
               ) : (
                 groupedTIs.map((group) => (
                   <div key={group.area} className="stack-sm" style={{ gap: 2, marginBottom: 8 }}>
-                    <span
-                      className="text-xs text-muted"
-                      style={{
-                        padding: '6px 10px 2px',
-                        fontWeight: 700,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.05em',
-                      }}
-                    >
-                      {group.area}
-                    </span>
+                    <span className="list-group-label">{group.area}</span>
                     {group.items.map((ti) => {
                       const isSelected = ti.key === activeTi.key;
                       return (
@@ -377,8 +366,8 @@ export function InstructionsView({
                           aria-current={isSelected ? 'true' : undefined}
                           onClick={() => selectTi(ti)}
                         >
-                          <span style={{ fontWeight: isSelected ? 650 : 500 }}>{ti.name}</span>
-                          <span className="pill pill--muted tabular-nums">
+                          <span style={{ fontWeight: isSelected ? 600 : 500 }}>{ti.name}</span>
+                          <span className="text-sm text-muted tabular-nums">
                             {ti.options.length} opts
                           </span>
                         </button>
@@ -392,17 +381,7 @@ export function InstructionsView({
             ) : (
               groupedPIs.map((group) => (
                 <div key={group.family} className="stack-sm" style={{ gap: 2, marginBottom: 8 }}>
-                  <span
-                    className="text-xs text-muted"
-                    style={{
-                      padding: '6px 10px 2px',
-                      fontWeight: 700,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.05em',
-                    }}
-                  >
-                    {group.family}
-                  </span>
+                  <span className="list-group-label">{group.family}</span>
                   {group.items.map((pi) => {
                     const isSelected = pi.key === activePi.key;
                     return (
@@ -414,8 +393,10 @@ export function InstructionsView({
                         aria-current={isSelected ? 'true' : undefined}
                         onClick={() => selectPi(pi.key)}
                       >
-                        <span style={{ fontWeight: isSelected ? 650 : 500 }}>{pi.name}</span>
-                        <span className={`pill ${pi.fm27 ? 'pill--fm27' : `pill--${pi.phase}`}`}>
+                        <span style={{ fontWeight: isSelected ? 600 : 500 }}>{pi.name}</span>
+                        <span
+                          className={`phase-tag ${pi.fm27 ? 'phase-tag--fm27' : `phase-tag--${pi.phase}`}`}
+                        >
                           {pi.fm27 ? 'FM27' : pi.phase.toUpperCase()}
                         </span>
                       </button>
@@ -434,17 +415,16 @@ export function InstructionsView({
               <div className="card">
                 <div className="card-header">
                   <div className="stack-sm" style={{ gap: 6 }}>
-                    <div className="row-wrap">
-                      <h2 style={{ fontSize: '1.25rem' }}>{activeTi.name}</h2>
-                      <span className={`pill pill--${activeTi.phase}`}>
+                    <h2 className="card-title">{activeTi.name}</h2>
+                    <div className="meta-line">
+                      <span className={`phase-tag phase-tag--${activeTi.phase}`}>
                         {activeTi.phase === 'ip' ? 'In Possession' : 'Out of Possession'}
                       </span>
-                      <span className="pill">{activeTi.area}</span>
-                      <span className="pill pill--muted tabular-nums">
-                        Complexity +{activeTi.complexity}
-                      </span>
+                      <span>·</span>
+                      <span>{activeTi.area}</span>
+                      <span>·</span>
+                      <span className="tabular-nums">Complexity +{activeTi.complexity}</span>
                     </div>
-                    <p className="text-sm text-muted">{activeTi.description}</p>
                   </div>
 
                   {onOpenInTactics && (
@@ -457,21 +437,24 @@ export function InstructionsView({
                   )}
                 </div>
 
+                <p className="text-body text-muted prose">{activeTi.description}</p>
+
                 {/* Live option selector right above the SVG pitch */}
-                <div className="row-wrap" role="group" aria-label={`${activeTi.name} options`}>
-                  {activeTi.options.map((optLabel, idx) => {
-                    const isActive = idx === safeOptIdx;
-                    return (
-                      <Button
-                        key={optLabel}
-                        className={`btn btn--sm ${isActive ? 'btn--primary' : ''}`}
-                        aria-pressed={isActive}
-                        onClick={() => setTiOptIdx(idx)}
-                      >
+                <div className="row-wrap">
+                  <SegmentedControl
+                    aria-label={`${activeTi.name} options`}
+                    value={String(safeOptIdx)}
+                    onValueChange={(next) => {
+                      if (next !== null) setTiOptIdx(Number(next));
+                    }}
+                  >
+                    <SegmentedControlIndicator />
+                    {activeTi.options.map((optLabel, idx) => (
+                      <SegmentedControlItem key={optLabel} value={String(idx)}>
                         {optLabel}
-                      </Button>
-                    );
-                  })}
+                      </SegmentedControlItem>
+                    ))}
+                  </SegmentedControl>
                 </div>
 
                 <PitchSvg
@@ -479,14 +462,14 @@ export function InstructionsView({
                   ariaLabel={`${activeTi.name}: ${activeTi.options[safeOptIdx]}`}
                 />
 
-                <div className="card--subtle">
-                  <div className="row-between" style={{ marginBottom: 4 }}>
-                    <strong className="text-sm">{activeTi.options[safeOptIdx]}</strong>
+                <div className="inset-callout">
+                  <div className="row-between">
+                    <strong className="text-body">{activeTi.options[safeOptIdx]}</strong>
                     {safeOptIdx === activeTi.defaultIndex && (
-                      <span className="pill pill--muted">Default</span>
+                      <span className="text-sm text-muted">Default</span>
                     )}
                   </div>
-                  <p className="text-sm">
+                  <p className="text-body prose">
                     {activeTi.optionNotes[safeOptIdx] ?? activeTi.description}
                   </p>
                 </div>
@@ -495,16 +478,12 @@ export function InstructionsView({
               <div className="card">
                 <div className="two-col">
                   <div className="diag-item diag-item--good">
-                    <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Strength
-                    </strong>
-                    <span>{activeTi.pro}</span>
+                    <strong className="text-sm">Strength</strong>
+                    <span className="prose">{activeTi.pro}</span>
                   </div>
                   <div className="diag-item diag-item--warn">
-                    <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Trade-Off
-                    </strong>
-                    <span>{activeTi.con}</span>
+                    <strong className="text-sm">Trade-off</strong>
+                    <span className="prose">{activeTi.con}</span>
                   </div>
                 </div>
 
@@ -514,8 +493,8 @@ export function InstructionsView({
                     <div className="stack">
                       {activeTi.need.low && activeTi.need.low.length > 0 && (
                         <div className="stack-sm">
-                          <span className="text-xs text-muted">
-                            Key Attributes for {activeTi.options[0]}
+                          <span className="text-sm text-muted">
+                            Key attributes for {activeTi.options[0]}
                           </span>
                           <div className="row-wrap">
                             {activeTi.need.low.map((k) => renderAttrChip(k))}
@@ -524,8 +503,8 @@ export function InstructionsView({
                       )}
                       {activeTi.need.high && activeTi.need.high.length > 0 && (
                         <div className="stack-sm">
-                          <span className="text-xs text-muted">
-                            Key Attributes for{' '}
+                          <span className="text-sm text-muted">
+                            Key attributes for{' '}
                             {activeTi.options[activeTi.options.length - 1]}
                           </span>
                           <div className="row-wrap">
@@ -537,7 +516,7 @@ export function InstructionsView({
                   </>
                 )}
 
-                <p className="text-xs text-muted">{activeTi.note}</p>
+                <p className="text-sm text-muted prose">{activeTi.note}</p>
               </div>
             </>
           ) : (
@@ -545,15 +524,20 @@ export function InstructionsView({
               <div className="card">
                 <div className="card-header">
                   <div className="stack-sm" style={{ gap: 6 }}>
-                    <div className="row-wrap">
-                      <h2 style={{ fontSize: '1.25rem' }}>{activePi.name}</h2>
-                      <span className={`pill pill--${activePi.phase}`}>
+                    <h2 className="card-title">{activePi.name}</h2>
+                    <div className="meta-line">
+                      <span className={`phase-tag phase-tag--${activePi.phase}`}>
                         {activePi.phase === 'ip' ? 'In Possession' : 'Out of Possession'}
                       </span>
-                      <span className="pill">{activePi.family}</span>
-                      {activePi.fm27 && <span className="pill pill--fm27">FM27 New</span>}
+                      <span>·</span>
+                      <span>{activePi.family}</span>
+                      {activePi.fm27 && (
+                        <>
+                          <span>·</span>
+                          <span style={{ color: 'var(--warn)', fontWeight: 600 }}>New in FM27</span>
+                        </>
+                      )}
                     </div>
-                    <p className="text-sm text-muted">{activePi.description}</p>
                   </div>
 
                   {onOpenInTactics && (
@@ -566,64 +550,63 @@ export function InstructionsView({
                   )}
                 </div>
 
+                <p className="text-body text-muted prose">{activePi.description}</p>
+
                 {/* Multi-option PI family switcher directly above the pitch */}
                 {piOptionFamily && (
                   <div className="stack-sm" style={{ gap: 6 }}>
-                    <span className="text-xs text-muted">{piOptionFamily.label}</span>
-                    <div className="row-wrap" role="group" aria-label={piOptionFamily.label}>
-                      {piOptionFamily.options.map((opt) => {
-                        const isActive = piPreviewOpt
-                          ? opt.diagramOption === piPreviewOpt
-                          : opt.piKey === activePi.key;
-                        return (
-                          <Button
+                    <span className="text-sm text-muted">{piOptionFamily.label}</span>
+                    <div className="row-wrap">
+                      <SegmentedControl
+                        aria-label={piOptionFamily.label}
+                        value={piPreviewOpt ? `opt:${piPreviewOpt}` : activePi.key}
+                        onValueChange={(next) => {
+                          if (!next) return;
+                          if (next.startsWith('opt:')) {
+                            setPiPreviewOpt(next.slice(4));
+                          } else {
+                            setSelectedPiKey(next as PIKey);
+                            setPiPreviewOpt(undefined);
+                          }
+                        }}
+                      >
+                        <SegmentedControlIndicator />
+                        {piOptionFamily.options.map((opt) => (
+                          <SegmentedControlItem
                             key={opt.id}
-                            className={`btn btn--sm ${isActive ? 'btn--primary' : ''}`}
-                            aria-pressed={isActive}
-                            onClick={() => {
-                              if (opt.piKey) {
-                                setSelectedPiKey(opt.piKey);
-                                setPiPreviewOpt(undefined);
-                              } else if (opt.diagramOption) {
-                                setPiPreviewOpt(opt.diagramOption);
-                              }
-                            }}
+                            value={opt.piKey ?? `opt:${opt.diagramOption}`}
                           >
                             {opt.label}
-                          </Button>
-                        );
-                      })}
+                          </SegmentedControlItem>
+                        ))}
+                      </SegmentedControl>
                     </div>
                   </div>
                 )}
 
                 <PitchSvg diagram={piDiagram} ariaLabel={`${piDiagram.title} diagram`} />
 
-                <div className="card--subtle">
-                  <strong className="text-sm" style={{ display: 'block', marginBottom: 4 }}>
-                    {piDiagram.title}
-                  </strong>
-                  <p className="text-sm">{piPreviewOpt === 'standard' ? piDiagram.subtitle : activePi.tip}</p>
+                <div className="inset-callout">
+                  <strong className="text-body">{piDiagram.title}</strong>
+                  <p className="text-body prose">
+                    {piPreviewOpt === 'standard' ? piDiagram.subtitle : activePi.tip}
+                  </p>
                 </div>
               </div>
 
               <div className="card">
                 <div className="stack">
-                  <div>
-                    <h3 style={{ marginBottom: 8 }}>Valid Positions</h3>
-                    <div className="row-wrap">
-                      {activePi.allowedGroups.map((g) => (
-                        <span key={g} className="pill">
-                          {GROUP_LABELS[g]}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="stack-sm">
+                    <h3>Valid positions</h3>
+                    <p className="text-sm text-muted">
+                      {activePi.allowedGroups.map((g) => GROUP_LABELS[g]).join(' · ')}
+                    </p>
                   </div>
 
                   <div className="divider" />
 
-                  <div>
-                    <h3 style={{ marginBottom: 8 }}>Required Attributes</h3>
+                  <div className="stack-sm">
+                    <h3>Required attributes</h3>
                     <div className="row-wrap">
                       {activePi.need.map((k) => renderAttrChip(k))}
                     </div>
@@ -632,8 +615,8 @@ export function InstructionsView({
                   {activePi.incompatibleWith.length > 0 && (
                     <>
                       <div className="divider" />
-                      <div>
-                        <h3 style={{ marginBottom: 8 }}>Mutually Exclusive With</h3>
+                      <div className="stack-sm">
+                        <h3>Mutually exclusive with</h3>
                         <div className="row-wrap">
                           {activePi.incompatibleWith.map((otherKey) => {
                             const other = PI_BY_KEY[otherKey];
@@ -641,7 +624,7 @@ export function InstructionsView({
                             return (
                               <Button
                                 key={otherKey}
-                                className="btn btn--sm"
+                                className="interactive-chip"
                                 onClick={() => selectPi(otherKey)}
                                 title={`Switch to ${other.name}`}
                               >
@@ -654,7 +637,7 @@ export function InstructionsView({
                     </>
                   )}
 
-                  <p className="text-xs text-muted">{activePi.note}</p>
+                  <p className="text-sm text-muted prose">{activePi.note}</p>
                 </div>
               </div>
             </>

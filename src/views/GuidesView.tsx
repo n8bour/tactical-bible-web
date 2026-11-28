@@ -229,19 +229,23 @@ export function GuidesView({
     if (!role) return null;
     if (!onJumpToRole) {
       return (
-        <span key={roleId} className={`pill pill--${role.phase}`}>
-          {role.name} ({role.abbr})
+        <span key={roleId} className="meta-line">
+          <span className={`phase-tag phase-tag--${role.phase}`}>
+            {role.name} ({role.abbr})
+          </span>
         </span>
       );
     }
     return (
       <Button
         key={roleId}
-        className={`pill pill--${role.phase}`}
-        style={{ cursor: 'pointer' }}
+        className="interactive-chip"
         onClick={() => onJumpToRole(role.id)}
       >
-        {role.name} ({role.abbr})
+        <span className={`phase-tag phase-tag--${role.phase}`}>{role.phase.toUpperCase()}</span>
+        <span>
+          {role.name} ({role.abbr})
+        </span>
       </Button>
     );
   };
@@ -251,8 +255,7 @@ export function GuidesView({
     return (
       <Button
         key={key}
-        className={`attr-chip attr-chip--${variant}`}
-        style={{ cursor: 'pointer' }}
+        className={`interactive-chip interactive-chip--${variant}`}
         onClick={() => jumpToAttributeHere(key)}
       >
         {label}
@@ -276,11 +279,8 @@ export function GuidesView({
         {/* Left Topic Navigation */}
         <aside className="list-pane" aria-label="Guide topics">
           <div className="list-pane-header">
-            <span
-              className="text-xs text-muted"
-              style={{ fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}
-            >
-              Reference Topics
+            <span className="list-group-label" style={{ padding: 0 }}>
+              Reference topics
             </span>
           </div>
           <div className="list-pane-scroll">
@@ -298,9 +298,9 @@ export function GuidesView({
                     setFocusedItemId(null);
                   }}
                 >
-                  <div className="stack-sm" style={{ gap: 1 }}>
-                    <span style={{ fontWeight: isSelected ? 650 : 500 }}>{topic.label}</span>
-                    <span className="text-xs text-muted">{topic.meta}</span>
+                  <div className="stack-sm" style={{ gap: 2 }}>
+                    <span style={{ fontWeight: isSelected ? 600 : 500 }}>{topic.label}</span>
+                    <span className="text-sm text-muted">{topic.meta}</span>
                   </div>
                 </button>
               );
@@ -317,7 +317,7 @@ export function GuidesView({
                 <div className="card-header">
                   <div>
                     <h2 className="card-title">Core FM26 / FM27 Tactical Concepts</h2>
-                    <p className="text-sm text-muted">
+                    <p className="text-body text-muted prose">
                       The ten structural principles behind modern dual-phase Football Manager tactics.
                     </p>
                   </div>
@@ -340,21 +340,25 @@ export function GuidesView({
                     style={highlightStyle(c.key)}
                   >
                     <div className="card-header">
-                      <h3 style={{ fontSize: '1.05rem' }}>{c.name}</h3>
-                      {c.name.includes('FM27') && <span className="pill pill--fm27">FM27</span>}
+                      <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                        {c.name}
+                      </h3>
+                      {c.name.includes('FM27') && (
+                        <span className="text-sm" style={{ color: 'var(--warn)', fontWeight: 600 }}>
+                          FM27
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm" style={{ fontWeight: 550 }}>
+                    <p className="text-body prose" style={{ fontWeight: 500 }}>
                       {c.summary}
                     </p>
-                    <p className="text-sm text-muted">{c.detail}</p>
+                    <p className="text-body text-muted prose">{c.detail}</p>
                     <div className="diag-item diag-item--tip">
-                      <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        Rule of Thumb
-                      </strong>
-                      <span>{c.ruleOfThumb}</span>
+                      <strong className="text-sm">Rule of thumb</strong>
+                      <span className="prose">{c.ruleOfThumb}</span>
                     </div>
                     {srcs.length > 0 && (
-                      <p className="text-xs text-muted">
+                      <p className="text-sm text-muted">
                         Sources: {srcs.map((s) => s.title).join(' · ')}
                       </p>
                     )}
@@ -371,7 +375,7 @@ export function GuidesView({
                 <div className="card-header">
                   <div>
                     <h2 className="card-title">Attributes Guide ({ATTRIBUTES.length})</h2>
-                    <p className="text-sm text-muted">
+                    <p className="text-body text-muted prose">
                       What every attribute governs, IP vs OOP distinctions, FM27 ME impact, and the
                       roles that rely on it.
                     </p>
@@ -430,50 +434,58 @@ export function GuidesView({
                       style={highlightStyle(attr.key)}
                     >
                       <div className="card-header">
-                        <div className="row-wrap">
-                          <h3 style={{ fontSize: '1.05rem' }}>{attr.name}</h3>
-                          <span className="pill">{attr.category}</span>
-                          {attr.meImpact && (
-                            <span className="pill pill--fm27 tabular-nums">
-                              FM27 ME ×{attr.meImpact.weight.toFixed(2)}
-                            </span>
-                          )}
+                        <div className="stack-sm" style={{ gap: 2 }}>
+                          <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                            {attr.name}
+                          </h3>
+                          <div className="meta-line">
+                            <span>{attr.category}</span>
+                            {attr.meImpact && (
+                              <>
+                                <span>·</span>
+                                <span
+                                  className="tabular-nums"
+                                  style={{ color: 'var(--warn)', fontWeight: 600 }}
+                                >
+                                  FM27 ME ×{attr.meImpact.weight.toFixed(2)}
+                                </span>
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <span className="text-xs text-muted tabular-nums">
+                        <span className="text-sm text-muted tabular-nums">
                           Key for {keyRoles.length} · Pref for {prefRoles.length}
                         </span>
                       </div>
 
-                      <p className="text-sm" style={{ fontWeight: 550 }}>
+                      <p className="text-body prose" style={{ fontWeight: 500 }}>
                         {attr.summary}
                       </p>
-                      <p className="text-sm text-muted">{attr.whatItGoverns}</p>
+                      <p className="text-body text-muted prose">{attr.whatItGoverns}</p>
 
                       <div className="diag-item diag-item--warn">
-                        <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          Watch Out
-                        </strong>
-                        <span>{attr.watchOut}</span>
+                        <strong className="text-sm">Watch out</strong>
+                        <span className="prose">{attr.watchOut}</span>
                       </div>
 
                       {attr.meImpact && (
-                        <p className="text-xs text-muted">
-                          FM27 ME Testing: {attr.meImpact.note}
+                        <p className="text-sm text-muted prose">
+                          FM27 ME testing: {attr.meImpact.note}
                         </p>
                       )}
 
                       <div className="row-wrap" style={{ gap: 6 }}>
-                        <span className="text-xs text-muted">Pairs with:</span>
+                        <span className="text-sm text-muted">Pairs with:</span>
                         {attr.pairsWith.map((pairKey) => renderAttrChip(pairKey, 'pref'))}
                       </div>
 
                       {keyRoles.length > 0 && (
                         <div className="stack-sm">
-                          <span className="text-xs text-muted">Key for roles:</span>
+                          <span className="text-sm text-muted">Key for roles:</span>
                           <div className="row-wrap" style={{ gap: 6 }}>
                             {keyRoles.slice(0, 12).map((r) => renderRoleButton(r.id))}
                             {keyRoles.length > 12 && (
-                              <span className="text-xs text-muted">
+                              <span className="text-sm text-muted">
                                 +{keyRoles.length - 12} more
                               </span>
                             )}
@@ -492,7 +504,7 @@ export function GuidesView({
             <>
               <div className="card">
                 <h2 className="card-title">Opposition Instructions (OI) Principles</h2>
-                <ul className="stack-sm text-sm" style={{ margin: 0, paddingLeft: 18 }}>
+                <ul className="stack-sm prose" style={{ margin: 0, paddingLeft: 18 }}>
                   {OPPOSITION_INSTRUCTIONS.principles.map((p) => (
                     <li key={p}>{p}</li>
                   ))}
@@ -507,32 +519,24 @@ export function GuidesView({
                   style={highlightStyle(action.key)}
                 >
                   <div className="card-header">
-                    <h3 style={{ fontSize: '1.05rem' }}>{action.name}</h3>
-                    <div className="row-wrap">
-                      {action.options.map((opt) => (
-                        <span key={opt} className="pill">
-                          {opt}
-                        </span>
-                      ))}
-                    </div>
+                    <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                      {action.name}
+                    </h3>
+                    <span className="text-sm text-muted">{action.options.join(' / ')}</span>
                   </div>
-                  <p className="text-sm text-muted">{action.summary}</p>
+                  <p className="text-body text-muted prose">{action.summary}</p>
                   <div className="two-col">
                     <div className="diag-item diag-item--good">
-                      <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        When to Use
-                      </strong>
-                      <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                      <strong className="text-sm">When to use</strong>
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                         {action.whenToUse.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
                       </ul>
                     </div>
                     <div className="diag-item diag-item--error">
-                      <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        Traps to Avoid
-                      </strong>
-                      <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                      <strong className="text-sm">Traps to avoid</strong>
+                      <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                         {action.whenNeverToUse.map((item) => (
                           <li key={item}>{item}</li>
                         ))}
@@ -542,7 +546,7 @@ export function GuidesView({
                   <div className="row-wrap" style={{ gap: 6 }}>
                     {action.targetAttributes.targetWhenLow && (
                       <>
-                        <span className="text-xs text-muted">Target when low:</span>
+                        <span className="text-sm text-muted">Target when low:</span>
                         {action.targetAttributes.targetWhenLow.map((k) =>
                           renderAttrChip(k, 'key'),
                         )}
@@ -550,7 +554,7 @@ export function GuidesView({
                     )}
                     {action.targetAttributes.avoidWhenHigh && (
                       <>
-                        <span className="text-xs text-muted" style={{ marginLeft: 8 }}>
+                        <span className="text-sm text-muted" style={{ marginLeft: 8 }}>
                           Avoid when high:
                         </span>
                         {action.targetAttributes.avoidWhenHigh.map((k) =>
@@ -563,26 +567,27 @@ export function GuidesView({
               ))}
 
               <div className="card">
-                <h2 className="card-title">
-                  7 Opponent Archetypes — Quick OI Playbook
-                </h2>
-                <div className="stack">
+                <h2 className="card-title">7 Opponent Archetypes: Quick OI Playbook</h2>
+                <div className="divided-list">
                   {OPPOSITION_INSTRUCTIONS.archetypes.map((arch) => (
-                    <div key={arch.id} className="card--subtle stack-sm">
-                      <div className="row-between">
+                    <div key={arch.id} className="stack-sm">
+                      <div className="row-between row-wrap">
                         <strong>{arch.archetype}</strong>
-                        <div className="row-wrap" style={{ gap: 4 }}>
+                        <div className="row-wrap" style={{ gap: 6 }}>
                           {arch.exampleRoles.map((rId) => renderRoleButton(rId))}
                         </div>
                       </div>
-                      <div className="row-wrap text-xs">
-                        <span className="pill">Press: {arch.recommended.triggerPress}</span>
-                        <span className="pill">Mark: {arch.recommended.tightMarking}</span>
-                        <span className="pill">Tackle: {arch.recommended.tackling}</span>
-                        <span className="pill">Foot: {arch.recommended.showOntoFoot}</span>
+                      <div className="meta-line">
+                        <span>Press: {arch.recommended.triggerPress}</span>
+                        <span>·</span>
+                        <span>Mark: {arch.recommended.tightMarking}</span>
+                        <span>·</span>
+                        <span>Tackle: {arch.recommended.tackling}</span>
+                        <span>·</span>
+                        <span>Foot: {arch.recommended.showOntoFoot}</span>
                       </div>
-                      <p className="text-sm">{arch.why}</p>
-                      <p className="text-xs" style={{ color: 'var(--warn)' }}>
+                      <p className="text-body prose">{arch.why}</p>
+                      <p className="text-sm" style={{ color: 'var(--warn)' }}>
                         Trap: {arch.trapToAvoid}
                       </p>
                     </div>
@@ -597,7 +602,7 @@ export function GuidesView({
             <>
               <div className="card">
                 <h2 className="card-title">Counter-Tactics by Opponent Formation</h2>
-                <p className="text-sm text-muted">
+                <p className="text-body text-muted prose">
                   Structural counters, danger signs, and selective Opposition Instructions against
                   the 6 most common opposition shapes.
                 </p>
@@ -611,26 +616,24 @@ export function GuidesView({
                   style={highlightStyle(opp.key)}
                 >
                   <div className="card-header">
-                    <h3 style={{ fontSize: '1.1rem' }}>Countering {opp.formation}</h3>
-                    <span className="pill pill--oop">Opponent Shape</span>
+                    <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                      Countering {opp.formation}
+                    </h3>
+                    <span className="phase-tag phase-tag--oop">Opponent shape</span>
                   </div>
                   <div className="diag-item diag-item--good">
-                    <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Structural Counter
-                    </strong>
-                    <span>{opp.structuralCounter}</span>
+                    <strong className="text-sm">Structural counter</strong>
+                    <span className="prose">{opp.structuralCounter}</span>
                   </div>
                   <div className="diag-item diag-item--warn">
-                    <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                      Watch For
-                    </strong>
-                    <span>{opp.watchFor}</span>
+                    <strong className="text-sm">Watch for</strong>
+                    <span className="prose">{opp.watchFor}</span>
                   </div>
                   <div className="stack-sm">
-                    <span className="text-xs text-muted" style={{ fontWeight: 600 }}>
-                      OI Tips
+                    <span className="text-sm text-muted" style={{ fontWeight: 600 }}>
+                      OI tips
                     </span>
-                    <ul className="stack-sm text-sm" style={{ margin: 0, paddingLeft: 18 }}>
+                    <ul className="stack-sm prose" style={{ margin: 0, paddingLeft: 18 }}>
                       {opp.oiTips.map((tip) => (
                         <li key={tip}>{tip}</li>
                       ))}
@@ -646,7 +649,7 @@ export function GuidesView({
             <>
               <div className="card">
                 <h2 className="card-title">Set Pieces Playbook</h2>
-                <p className="text-sm text-muted">{SET_PIECES.overview}</p>
+                <p className="text-body text-muted prose">{SET_PIECES.overview}</p>
                 <SegmentedControl
                   aria-label="Filter set piece category"
                   value={setPieceCat}
@@ -668,9 +671,9 @@ export function GuidesView({
                 <div key={cat.id} className="stack">
                   <div className="row-between">
                     <h2>{cat.title}</h2>
-                    <span className="text-xs text-muted">{cat.routines.length} routines</span>
+                    <span className="text-sm text-muted">{cat.routines.length} routines</span>
                   </div>
-                  <p className="text-sm text-muted">{cat.summary}</p>
+                  <p className="text-body text-muted prose">{cat.summary}</p>
                   {cat.routines.map((routine) => (
                     <article
                       key={routine.id}
@@ -678,49 +681,49 @@ export function GuidesView({
                       className="card"
                       style={highlightStyle(routine.id)}
                     >
-                      <h3 style={{ fontSize: '1.05rem' }}>{routine.name}</h3>
-                      <p className="text-sm">
+                      <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                        {routine.name}
+                      </h3>
+                      <p className="text-body prose">
                         <strong>Delivery:</strong> {routine.delivery}
                       </p>
-                      <p className="text-sm text-muted">{routine.setup}</p>
+                      <p className="text-body text-muted prose">{routine.setup}</p>
 
                       <div className="two-col">
                         <div className="diag-item diag-item--good">
-                          <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                            Best When
-                          </strong>
-                          <span>{routine.bestWhen}</span>
+                          <strong className="text-sm">Best when</strong>
+                          <span className="prose">{routine.bestWhen}</span>
                         </div>
                         <div className="diag-item diag-item--tip">
-                          <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                            Rest-Defence
-                          </strong>
-                          <span>{routine.restDefence}</span>
+                          <strong className="text-sm">Rest-defence</strong>
+                          <span className="prose">{routine.restDefence}</span>
                         </div>
                       </div>
 
                       <div className="stack-sm">
-                        <span className="text-xs text-muted" style={{ fontWeight: 600 }}>
-                          Key Assignments &amp; Target Attributes
+                        <span className="text-sm text-muted" style={{ fontWeight: 600 }}>
+                          Key assignments &amp; target attributes
                         </span>
-                        {routine.keyRoles.map((kr) => (
-                          <div key={kr.assignment} className="card--subtle stack-sm">
-                            <div className="row-between">
-                              <strong className="text-sm">{kr.assignment}</strong>
-                              <div className="row-wrap" style={{ gap: 4 }}>
-                                {kr.targetAttrs.map((a) => renderAttrChip(a, 'key'))}
+                        <div className="divided-list">
+                          {routine.keyRoles.map((kr) => (
+                            <div key={kr.assignment} className="stack-sm">
+                              <div className="row-between row-wrap">
+                                <strong className="text-body">{kr.assignment}</strong>
+                                <div className="row-wrap" style={{ gap: 6 }}>
+                                  {kr.targetAttrs.map((a) => renderAttrChip(a, 'key'))}
+                                </div>
                               </div>
+                              <p className="text-sm text-muted prose">{kr.note}</p>
                             </div>
-                            <p className="text-xs text-muted">{kr.note}</p>
-                          </div>
-                        ))}
+                          ))}
+                        </div>
                       </div>
 
                       <div className="stack-sm">
-                        <span className="text-xs text-muted" style={{ fontWeight: 600 }}>
+                        <span className="text-sm text-muted" style={{ fontWeight: 600 }}>
                           Pitfalls
                         </span>
-                        <ul className="stack-sm text-xs text-muted" style={{ margin: 0, paddingLeft: 18 }}>
+                        <ul className="stack-sm prose text-muted" style={{ margin: 0, paddingLeft: 18 }}>
                           {routine.pitfalls.map((pit) => (
                             <li key={pit}>{pit}</li>
                           ))}
@@ -738,7 +741,7 @@ export function GuidesView({
             <>
               <div className="card">
                 <h2 className="card-title">Player Traits / PPMs ({PLAYER_TRAITS.length})</h2>
-                <p className="text-sm text-muted">
+                <p className="text-body text-muted prose">
                   Player traits can reinforce a role or silently override your Team and Player
                   Instructions.
                 </p>
@@ -782,21 +785,21 @@ export function GuidesView({
                     style={highlightStyle(trait.id)}
                   >
                     <div className="card-header">
-                      <h3 style={{ fontSize: '1.05rem' }}>{trait.name}</h3>
-                      <span className="pill">{trait.category}</span>
+                      <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                        {trait.name}
+                      </h3>
+                      <span className="text-sm text-muted">{trait.category}</span>
                     </div>
-                    <p className="text-sm">{trait.effect}</p>
+                    <p className="text-body prose">{trait.effect}</p>
 
                     <div className="diag-item diag-item--warn">
-                      <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        Conflict &amp; Synergy Note
-                      </strong>
-                      <span>{trait.conflictNote}</span>
+                      <strong className="text-sm">Conflict &amp; synergy note</strong>
+                      <span className="prose">{trait.conflictNote}</span>
                     </div>
 
                     {(trait.bestRolesIP.length > 0 || trait.bestRolesOOP.length > 0) && (
                       <div className="row-wrap" style={{ gap: 6 }}>
-                        <span className="text-xs text-muted">Best-fit roles:</span>
+                        <span className="text-sm text-muted">Best-fit roles:</span>
                         {trait.bestRolesIP.map((r) => renderRoleButton(r))}
                         {trait.bestRolesOOP.map((r) => renderRoleButton(r))}
                       </div>
@@ -804,21 +807,20 @@ export function GuidesView({
 
                     {(trait.conflictsWithTIs.length > 0 || trait.conflictsWithPIs.length > 0) && (
                       <div className="row-wrap" style={{ gap: 6 }}>
-                        <span className="text-xs text-muted">Watch conflicts with:</span>
+                        <span className="text-sm text-muted">Watch conflicts with:</span>
                         {trait.conflictsWithTIs.map((tiKey) => {
                           const ti = TI_BY_KEY[tiKey as TIKey];
                           if (!ti) return null;
                           return onJumpToInstruction ? (
                             <Button
                               key={tiKey}
-                              className="pill pill--danger"
-                              style={{ cursor: 'pointer' }}
+                              className="interactive-chip interactive-chip--danger"
                               onClick={() => onJumpToInstruction('ti', tiKey)}
                             >
                               TI: {ti.name}
                             </Button>
                           ) : (
-                            <span key={tiKey} className="pill pill--danger">
+                            <span key={tiKey} className="text-sm" style={{ color: 'var(--danger)' }}>
                               TI: {ti.name}
                             </span>
                           );
@@ -829,14 +831,13 @@ export function GuidesView({
                           return onJumpToInstruction ? (
                             <Button
                               key={piKey}
-                              className="pill pill--danger"
-                              style={{ cursor: 'pointer' }}
+                              className="interactive-chip interactive-chip--danger"
                               onClick={() => onJumpToInstruction('pi', piKey)}
                             >
                               PI: {pi.name}
                             </Button>
                           ) : (
-                            <span key={piKey} className="pill pill--danger">
+                            <span key={piKey} className="text-sm" style={{ color: 'var(--danger)' }}>
                               PI: {pi.name}
                             </span>
                           );
@@ -845,7 +846,7 @@ export function GuidesView({
                     )}
 
                     <div className="row-wrap" style={{ gap: 6 }}>
-                      <span className="text-xs text-muted">Moderated by:</span>
+                      <span className="text-sm text-muted">Moderated by:</span>
                       {trait.moderationAttrs.map((k) => renderAttrChip(k, 'pref'))}
                     </div>
                   </article>
@@ -859,7 +860,7 @@ export function GuidesView({
             <>
               <div className="card">
                 <h2 className="card-title">Tactical Troubleshooting</h2>
-                <p className="text-sm text-muted">
+                <p className="text-body text-muted prose">
                   Diagnose common match symptoms and fix them one variable at a time.
                 </p>
                 <div className="row-wrap">
@@ -892,11 +893,15 @@ export function GuidesView({
                   >
                     <div className="card-header">
                       <div className="stack-sm" style={{ gap: 4 }}>
-                        <div className="row-wrap">
-                          <h3 style={{ fontSize: '1.05rem' }}>{item.symptom}</h3>
-                          <span className="pill pill--warn">{item.category}</span>
+                        <div className="meta-line">
+                          <span style={{ color: 'var(--warn)', fontWeight: 600 }}>
+                            {item.category}
+                          </span>
                         </div>
-                        <p className="text-sm text-muted">{item.summary}</p>
+                        <h3 style={{ fontSize: 'var(--text-heading)', fontFamily: 'var(--font-display)' }}>
+                          {item.symptom}
+                        </h3>
+                        <p className="text-body text-muted prose">{item.summary}</p>
                       </div>
                       {preset && onLoadPresetInTactics && (
                         <Button
@@ -910,20 +915,16 @@ export function GuidesView({
 
                     <div className="two-col">
                       <div className="diag-item diag-item--error">
-                        <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          Root Causes
-                        </strong>
-                        <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                        <strong className="text-sm">Root causes</strong>
+                        <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                           {item.rootCauses.map((rc) => (
                             <li key={rc}>{rc}</li>
                           ))}
                         </ul>
                       </div>
                       <div className="diag-item diag-item--good">
-                        <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                          1-Variable Fixes
-                        </strong>
-                        <ul style={{ margin: '4px 0 0', paddingLeft: 16 }}>
+                        <strong className="text-sm">1-variable fixes</strong>
+                        <ul style={{ margin: '4px 0 0', paddingLeft: 18 }}>
                           {item.fixes.map((fx) => (
                             <li key={fx}>{fx}</li>
                           ))}
@@ -932,10 +933,8 @@ export function GuidesView({
                     </div>
 
                     <div className="diag-item diag-item--tip">
-                      <strong className="text-xs" style={{ textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                        Rule of Thumb
-                      </strong>
-                      <span>{item.ruleOfThumb}</span>
+                      <strong className="text-sm">Rule of thumb</strong>
+                      <span className="prose">{item.ruleOfThumb}</span>
                     </div>
 
                     <div className="row-wrap" style={{ gap: 6 }}>
@@ -946,14 +945,13 @@ export function GuidesView({
                         return onJumpToInstruction ? (
                           <Button
                             key={tiKey}
-                            className="pill pill--info"
-                            style={{ cursor: 'pointer' }}
+                            className="interactive-chip interactive-chip--pref"
                             onClick={() => onJumpToInstruction('ti', tiKey)}
                           >
                             TI: {ti.name}
                           </Button>
                         ) : (
-                          <span key={tiKey} className="pill pill--info">
+                          <span key={tiKey} className="text-sm" style={{ color: 'var(--info)' }}>
                             TI: {ti.name}
                           </span>
                         );
@@ -964,14 +962,13 @@ export function GuidesView({
                         return onJumpToInstruction ? (
                           <Button
                             key={piKey}
-                            className="pill pill--fm27"
-                            style={{ cursor: 'pointer' }}
+                            className="interactive-chip interactive-chip--warn"
                             onClick={() => onJumpToInstruction('pi', piKey)}
                           >
                             PI: {pi.name}
                           </Button>
                         ) : (
-                          <span key={piKey} className="pill pill--fm27">
+                          <span key={piKey} className="text-sm" style={{ color: 'var(--warn)' }}>
                             PI: {pi.name}
                           </span>
                         );
@@ -991,9 +988,9 @@ export function GuidesView({
                 <div className="card-header">
                   <div>
                     <h2 className="card-title">The 7-Step Mentality Ladder</h2>
-                    <p className="text-sm text-muted">
+                    <p className="text-body text-muted prose">
                       Mentality sets the global baseline for risk, tempo, directness, width, lines,
-                      and pressing — Team Instructions stack relatively on top.
+                      and pressing. Team Instructions stack relatively on top.
                     </p>
                   </div>
                 </div>
@@ -1007,7 +1004,7 @@ export function GuidesView({
                         <th>Width</th>
                         <th>Line</th>
                         <th>Press</th>
-                        <th>When to Use</th>
+                        <th>When to use</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1021,7 +1018,7 @@ export function GuidesView({
                           <td className="tabular-nums">{formatShift(m.shifts.width)}</td>
                           <td className="tabular-nums">{formatShift(m.shifts.line)}</td>
                           <td className="tabular-nums">{formatShift(m.shifts.pressing)}</td>
-                          <td className="text-xs text-muted">{m.whenToUse}</td>
+                          <td className="text-sm text-muted">{m.whenToUse}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -1033,33 +1030,35 @@ export function GuidesView({
               <div className="card">
                 <div className="card-header">
                   <h2 className="card-title">FM27 Tactical Tweaks</h2>
-                  <span className="pill pill--fm27">FM27 New</span>
+                  <span className="text-sm" style={{ color: 'var(--warn)', fontWeight: 600 }}>
+                    New in FM27
+                  </span>
                 </div>
-                <p className="text-sm text-muted">{IN_MATCH_GUIDE.tweaksOverview}</p>
-                <ul className="stack-sm text-sm" style={{ margin: 0, paddingLeft: 18 }}>
+                <p className="text-body text-muted prose">{IN_MATCH_GUIDE.tweaksOverview}</p>
+                <ul className="stack-sm prose" style={{ margin: 0, paddingLeft: 18 }}>
                   {IN_MATCH_GUIDE.tweaksVsMainTactic.map((line) => (
                     <li key={line}>{line}</li>
                   ))}
                 </ul>
-                <div className="stack-sm">
+                <div className="divided-list">
                   {IN_MATCH_GUIDE.tweaks.map((tw) => (
                     <div
                       key={tw.id}
                       id={`guide-item-${tw.id}`}
-                      className="card--subtle stack-sm"
+                      className="stack-sm"
                       style={highlightStyle(tw.id)}
                     >
                       <div className="row-between">
                         <strong>{tw.name}</strong>
-                        <span className="pill">{tw.category}</span>
+                        <span className="text-sm text-muted">{tw.category}</span>
                       </div>
-                      <p className="text-sm">
+                      <p className="text-body prose">
                         <strong>When:</strong> {tw.whenToUse}
                       </p>
-                      <p className="text-xs text-muted">
+                      <p className="text-sm text-muted prose">
                         <strong>Adjusts:</strong> {tw.whatItAdjusts}
                       </p>
-                      <p className="text-xs" style={{ color: 'var(--warn)' }}>
+                      <p className="text-sm prose" style={{ color: 'var(--warn)' }}>
                         Caution: {tw.caution}
                       </p>
                     </div>
@@ -1071,28 +1070,30 @@ export function GuidesView({
               <div className="card">
                 <div className="card-header">
                   <h2 className="card-title">Rebuilt FM27 Touchline Shouts</h2>
-                  <span className="pill pill--fm27">Mood-Based</span>
+                  <span className="text-sm" style={{ color: 'var(--warn)', fontWeight: 600 }}>
+                    Mood-based
+                  </span>
                 </div>
-                <p className="text-sm text-muted">{IN_MATCH_GUIDE.shoutsOverview}</p>
+                <p className="text-body text-muted prose">{IN_MATCH_GUIDE.shoutsOverview}</p>
                 <div className="grid-cards">
                   {IN_MATCH_GUIDE.shouts.map((sh) => (
                     <div
                       key={sh.id}
                       id={`guide-item-${sh.id}`}
-                      className="card--subtle stack-sm"
+                      className="inset-callout"
                       style={highlightStyle(sh.id)}
                     >
                       <strong>{sh.name}</strong>
-                      <p className="text-xs">
+                      <p className="text-sm">
                         <strong>Match state:</strong> {sh.bestMatchState}
                       </p>
-                      <p className="text-xs text-muted">
+                      <p className="text-sm text-muted">
                         <strong>Best mood/personality:</strong> {sh.bestMoodOrPersonality}
                       </p>
-                      <p className="text-xs" style={{ color: 'var(--danger)' }}>
+                      <p className="text-sm" style={{ color: 'var(--danger)' }}>
                         <strong>Avoid:</strong> {sh.avoidWhen}
                       </p>
-                      <p className="text-xs" style={{ color: 'var(--accent)' }}>
+                      <p className="text-sm" style={{ color: 'var(--accent)' }}>
                         <strong>Effect:</strong> {sh.expectedEffect}
                       </p>
                     </div>
@@ -1103,7 +1104,7 @@ export function GuidesView({
               {/* Half-Time Checklist */}
               <div className="card">
                 <h2 className="card-title">Half-Time Adjustment Checklist</h2>
-                <ol className="stack-sm text-sm" style={{ margin: 0, paddingLeft: 20 }}>
+                <ol className="stack-sm prose" style={{ margin: 0, paddingLeft: 20 }}>
                   {IN_MATCH_GUIDE.halfTimeChecklist.map((step) => (
                     <li key={step}>{step}</li>
                   ))}
@@ -1117,25 +1118,25 @@ export function GuidesView({
             <>
               <div className="card">
                 <h2 className="card-title">Model Transparency &amp; Provenance</h2>
-                <p className="text-sm text-muted">
+                <p className="text-body text-muted prose">
                   Tactical Bible clearly separates verified public Football Manager documentation
                   from deterministic tactical model estimates:
                 </p>
                 <div className="two-col">
                   <div className="diag-item diag-item--good">
-                    <strong>Confirmed (`conf`)</strong>
-                    <span className="text-sm">
+                    <strong>Confirmed (conf)</strong>
+                    <span className="text-body prose">
                       Role roster (77 IP &amp; OOP roles), FM27 Tactical Effectiveness pillars
                       (50/25/15/10), ~3-week tactical training decay, FM27 ME attribute testing
                       weights, and official feature reveals cite named public sources below.
                     </span>
                   </div>
                   <div className="diag-item diag-item--tip">
-                    <strong>Estimated Model (`est`)</strong>
-                    <span className="text-sm">
+                    <strong>Estimated model (est)</strong>
+                    <span className="text-body prose">
                       Pitch coordinates, 3×3 ball-zone shifts, 35-zone coverage scores, role
                       profile vectors, and diagnostic thresholds are transparent, deterministic
-                      tactical heuristics — never hidden Sports Interactive Match Engine formulas.
+                      tactical heuristics, never hidden Sports Interactive Match Engine formulas.
                     </span>
                   </div>
                 </div>
@@ -1160,10 +1161,10 @@ export function GuidesView({
                   </SegmentedControl>
                 </div>
 
-                <div className="stack-sm">
+                <div className="divided-list">
                   {filteredSources.map((src) => (
-                    <div key={src.id} className="card--subtle stack-sm">
-                      <div className="row-between">
+                    <div key={src.id} className="stack-sm">
+                      <div className="row-between row-wrap">
                         <a
                           href={src.url}
                           target="_blank"
@@ -1172,22 +1173,25 @@ export function GuidesView({
                         >
                           {src.title} ↗
                         </a>
-                        <div className="row" style={{ gap: 6 }}>
-                          <span className="text-xs text-muted">{src.publisher}</span>
+                        <div className="meta-line">
+                          <span>{src.publisher}</span>
+                          <span>·</span>
                           <span
-                            className={`pill ${
-                              src.category === 'official'
-                                ? 'pill--ok'
-                                : src.category === 'engine-test'
-                                  ? 'pill--fm27'
-                                  : 'pill--muted'
-                            }`}
+                            style={{
+                              color:
+                                src.category === 'official'
+                                  ? 'var(--accent)'
+                                  : src.category === 'engine-test'
+                                    ? 'var(--warn)'
+                                    : 'var(--muted)',
+                              fontWeight: 600,
+                            }}
                           >
                             {SOURCE_CATEGORY_LABELS[src.category]}
                           </span>
                         </div>
                       </div>
-                      <p className="text-xs text-muted">{src.scope}</p>
+                      <p className="text-sm text-muted prose">{src.scope}</p>
                     </div>
                   ))}
                 </div>

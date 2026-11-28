@@ -102,7 +102,77 @@ function renderPlayerAriaLabel(player: PitchPlayerToken): string {
     parts.push(player.sublabel);
   }
   if (player.note) parts.push(player.note);
-  return parts.join(' — ');
+  return parts.join(' - ');
+}
+
+function minPlayerDist(x: number, y: number, players: readonly PitchPlayerToken[]): number {
+  let min = Infinity;
+  for (const p of players) {
+    const dBody = Math.hypot(x - p.x, y - p.y);
+    if (dBody < min) min = dBody;
+    if (p.sublabel) {
+      const subY = p.y > PITCH_WIDTH - 8.5 ? p.y - 5.2 : p.y + 5.6;
+      const dSub = Math.hypot(x - p.x, y - subY);
+      if (dSub < min) min = dSub;
+    }
+  }
+  return min;
+}
+
+function pickCellScoreAnchor(
+  cell: ZoneCell,
+  players: readonly PitchPlayerToken[],
+): { x: number; y: number; textAnchor: 'start' | 'end' } {
+  const w = cell.x1 - cell.x0;
+  const h = cell.y1 - cell.y0;
+  const candidates: { x: number; y: number; textAnchor: 'start' | 'end' }[] = [
+    { x: cell.x0 + w - 1.1, y: cell.y0 + 2.5, textAnchor: 'end' },
+    { x: cell.x0 + 1.1, y: cell.y0 + 2.5, textAnchor: 'start' },
+    { x: cell.x0 + w - 1.1, y: cell.y0 + h - 1.1, textAnchor: 'end' },
+    { x: cell.x0 + 1.1, y: cell.y0 + h - 1.1, textAnchor: 'start' },
+  ];
+  let best = candidates[0];
+  let bestDist = -1;
+  for (const c of candidates) {
+    const d = minPlayerDist(c.x, c.y, players);
+    if (d > bestDist) {
+      bestDist = d;
+      best = c;
+    }
+  }
+  return best;
+}
+
+function pickHighlightLabelPos(
+  hl: { x: number; y: number; r: number; label: string },
+  players: readonly PitchPlayerToken[],
+): { x: number; y: number; estWidth: number } {
+  const estWidth = clamp(hl.label.length * 1.28 + 3.2, 10, 30);
+  const halfW = estWidth / 2;
+  const rawCandidates = [
+    { x: hl.x, y: hl.y - hl.r - 1.8 },
+    { x: hl.x, y: hl.y + hl.r + 2.4 },
+    { x: hl.x - hl.r - halfW - 1.2, y: hl.y + 0.5 },
+    { x: hl.x + hl.r + halfW + 1.2, y: hl.y + 0.5 },
+  ];
+
+  let best = {
+    x: clamp(rawCandidates[0].x, halfW + 1, PITCH_LENGTH - halfW - 1),
+    y: clamp(rawCandidates[0].y, 3.4, PITCH_WIDTH - 2.4),
+  };
+  let bestDist = -1;
+
+  for (const cand of rawCandidates) {
+    const cx = clamp(cand.x, halfW + 1, PITCH_LENGTH - halfW - 1);
+    const cy = clamp(cand.y, 3.4, PITCH_WIDTH - 2.4);
+    const d = minPlayerDist(cx, cy, players);
+    if (d > bestDist) {
+      bestDist = d;
+      best = { x: cx, y: cy };
+    }
+  }
+
+  return { ...best, estWidth };
 }
 
 export function PitchSvg({
@@ -121,7 +191,7 @@ export function PitchSvg({
   const clipId = `pitch-clip-${uid}`;
   const tokenR = compact ? 2.65 : 3.05;
   const isInteractive = Boolean(onSelectSlot || onSelectBallZone || onSelectCell);
-  const label = ariaLabel ?? `${diagram.title}${diagram.subtitle ? ` — ${diagram.subtitle}` : ''}`;
+  const label = ariaLabel ?? `${diagram.title}${diagram.subtitle ? `: ${diagram.subtitle}` : ''}`;
 
   // Stagger vertical line badges when two tactical lines sit close together horizontally.
   const lineBadges = (diagram.lines ?? []).map((line, index, arr) => {
@@ -175,7 +245,7 @@ export function PitchSvg({
         </defs>
 
         {/* Outer pitch surround */}
-        <rect x={-4} y={-4} width={113} height={76} rx={2.4} fill="#0c261b" />
+        <rect x={-4} y={-4} width={113} height={76} rx={2.4} fill="#0a1f16" />
 
         {/* Mown turf stripes */}
         <g clipPath={`url(#${clipId})`}>
@@ -186,7 +256,7 @@ export function PitchSvg({
               y={0}
               width={STRIPE_WIDTH + 0.08}
               height={PITCH_WIDTH}
-              fill={i % 2 === 0 ? '#123e2a' : '#154730'}
+              fill={i % 2 === 0 ? '#103725' : '#133f2b'}
             />
           ))}
         </g>
@@ -201,6 +271,7 @@ export function PitchSvg({
               const w = cell.x1 - cell.x0;
               const h = cell.y1 - cell.y0;
               const interactiveCell = Boolean(onSelectCell);
+              const scoreAnchor = !compact ? pickCellScoreAnchor(cell, diagram.players) : null;
               return (
                 <g
                   key={`${cell.col}-${cell.row}`}
@@ -229,15 +300,15 @@ export function PitchSvg({
                     height={Math.max(0, h - 0.5)}
                     rx={0.5}
                     fill={style.fill}
-                    stroke={isSelected ? '#f8fafc' : style.stroke}
+                    stroke={isSelected ? '#f0f4f1' : style.stroke}
                     strokeWidth={isSelected ? 0.55 : 0.22}
                   />
-                  {!compact && (
+                  {scoreAnchor && (
                     <text
-                      x={cell.x0 + w - 1.1}
-                      y={cell.y0 + 2.5}
-                      textAnchor="end"
-                      fill="rgba(241, 245, 249, 0.72)"
+                      x={scoreAnchor.x}
+                      y={scoreAnchor.y}
+                      textAnchor={scoreAnchor.textAnchor}
+                      fill="rgba(240, 244, 241, 0.78)"
                       fontSize={1.75}
                       fontWeight={600}
                       pointerEvents="none"
@@ -254,7 +325,7 @@ export function PitchSvg({
         {/* Crisp field markings (always above heatmap fills) */}
         <g
           fill="none"
-          stroke="rgba(255, 255, 255, 0.44)"
+          stroke="rgba(240, 244, 241, 0.40)"
           strokeWidth={0.34}
           pointerEvents="none"
         >
@@ -293,20 +364,20 @@ export function PitchSvg({
           <text
             x={0.8}
             y={-1.45}
-            fill="rgba(203, 213, 225, 0.72)"
-            fontSize={2.0}
-            fontWeight={600}
-            letterSpacing={0.14}
+            fill="rgba(240, 244, 241, 0.78)"
+            fontSize={2.05}
+            fontWeight={500}
+            letterSpacing={0.02}
           >
-            {diagram.phase === 'ip' ? 'IN POSSESSION' : 'OUT OF POSSESSION'}
+            {diagram.phase === 'ip' ? 'In possession' : 'Out of possession'}
           </text>
           <text
             x={PITCH_LENGTH - 0.5}
             y={-1.45}
             textAnchor="end"
-            fill="rgba(148, 163, 184, 0.85)"
+            fill="rgba(153, 170, 162, 0.9)"
             fontSize={2.05}
-            fontWeight={600}
+            fontWeight={500}
           >
             Attacking →
           </text>
@@ -386,8 +457,10 @@ export function PitchSvg({
                   : hl.kind === 'target'
                     ? { fill: 'rgba(251, 191, 36, 0.16)', stroke: 'rgba(251, 191, 36, 0.72)' }
                     : { fill: 'rgba(56, 189, 248, 0.14)', stroke: 'rgba(56, 189, 248, 0.54)' };
-              const labelX = clamp(hl.x, 8, PITCH_LENGTH - 8);
-              const labelY = clamp(hl.y - hl.r - 1.2, 3.2, PITCH_WIDTH - 2);
+              const labelPos =
+                hl.label && !compact
+                  ? pickHighlightLabelPos({ ...hl, label: hl.label }, diagram.players)
+                  : null;
               return (
                 <g key={idx}>
                   <circle
@@ -399,17 +472,28 @@ export function PitchSvg({
                     strokeWidth={0.36}
                     strokeDasharray={hl.kind === 'press' ? '1.5 1.1' : undefined}
                   />
-                  {hl.label && !compact && (
-                    <text
-                      x={labelX}
-                      y={labelY}
-                      textAnchor="middle"
-                      fill="#f8fafc"
-                      fontSize={1.9}
-                      fontWeight={600}
-                    >
-                      {hl.label}
-                    </text>
+                  {hl.label && labelPos && (
+                    <g transform={`translate(${labelPos.x}, ${labelPos.y})`}>
+                      <rect
+                        x={-labelPos.estWidth / 2}
+                        y={-1.65}
+                        width={labelPos.estWidth}
+                        height={2.85}
+                        rx={0.8}
+                        fill="rgba(11, 14, 13, 0.86)"
+                        stroke={color.stroke}
+                        strokeWidth={0.2}
+                      />
+                      <text
+                        y={0.42}
+                        textAnchor="middle"
+                        fill="#f0f4f1"
+                        fontSize={1.85}
+                        fontWeight={600}
+                      >
+                        {hl.label}
+                      </text>
+                    </g>
                   )}
                 </g>
               );
@@ -580,8 +664,8 @@ export function PitchSvg({
             const fill = isHome
               ? isSelected
                 ? '#065f46'
-                : '#0f172a'
-              : '#251018';
+                : '#0e1513'
+              : '#261217';
             const stroke = isHome
               ? isSelected
                 ? '#fbbf24'

@@ -67,6 +67,11 @@ interface IndexedEntry {
   target: SearchTarget;
 }
 
+function formatLegacyEquiv(raw: string): string {
+  const clean = raw.replace(/^FM24\s+/i, '').trim();
+  return `Formerly FM24 ${clean}`;
+}
+
 function buildSearchIndex(): {
   allItems: CommandData;
   emptyItems: CommandData;
@@ -98,7 +103,7 @@ function buildSearchIndex(): {
   const roleItems = ROLES.map((role) => {
     const groupsText = role.groups.map((g) => GROUP_LABELS[g]).join(', ');
     const subtitleParts = [groupsText];
-    if (role.legacyEquiv) subtitleParts.push(`FM24: ${role.legacyEquiv}`);
+    if (role.legacyEquiv) subtitleParts.push(formatLegacyEquiv(role.legacyEquiv));
     return toItem({
       value: `role:${role.id}`,
       label: `${role.name} (${role.abbr})`,
@@ -347,7 +352,7 @@ function RenderCommandEntries({
               {meta?.subtitle && <span className="search-item-sub">{meta.subtitle}</span>}
             </div>
             {meta && (
-              <span className={`pill pill--${meta.badgeTone} search-item-badge`}>
+              <span className={`search-item-kind search-item-kind--${meta.badgeTone}`}>
                 {meta.badge}
               </span>
             )}

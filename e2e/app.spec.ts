@@ -119,6 +119,15 @@ test.describe('FM27 Tactical Bible SPA', () => {
     const playerCircles = circles.filter((c) => c.kind === 'player');
     expect(playerCircles.length).toBe(11);
     assertAllCirclesStrictlyInPitch(circles, 'Initial Tactics Board');
+    for (let i = 0; i < playerCircles.length; i++) {
+      for (let j = i + 1; j < playerCircles.length; j++) {
+        const d = Math.hypot(
+          playerCircles[i].x - playerCircles[j].x,
+          playerCircles[i].y - playerCircles[j].y,
+        );
+        expect(d, `Token separation (${playerCircles[i].text} vs ${playerCircles[j].text})`).toBeGreaterThanOrEqual(5.5);
+      }
+    }
 
     // Switch across all 4 sections with zero page reloads
     await nav.getByRole('button', { name: 'Roles' }).click();
@@ -269,12 +278,13 @@ test.describe('FM27 Tactical Bible SPA', () => {
       .click();
 
     // Pick an archetype preset and toggle FM27 ME-Weighted
-    const archetypeBtn = page
-      .getByRole('button', {
+    await page.getByRole('combobox', { name: 'Quick archetype preset' }).click();
+    await page
+      .getByRole('option', {
         name: /Pressing Channel Striker|Creative Number 10|Inverted|Wing-Back|Playmaker|Centre-Back/i,
       })
-      .first();
-    await archetypeBtn.click();
+      .first()
+      .click();
 
     const meToggle = page
       .getByRole('radio', { name: /FM27 ME/i })

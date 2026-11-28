@@ -181,7 +181,7 @@ function SidebarBody({
         >
           Sources &amp; Model
         </Button>
-        <p className="sidebar-disclaimer">Model guide · not the game engine</p>
+        <p className="sidebar-disclaimer">Model guide, not the game engine</p>
       </div>
     </>
   );
